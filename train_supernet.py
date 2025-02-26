@@ -218,7 +218,7 @@ def main(args) :
     utils.init_signal_handler()
 
     device = torch.device(args.device)
-
+    update_config_from_file(args.cfg)
     if utils.is_main_process() :
         # similar API to wandb except mode and log_dir
         logger = Logger(project_name="whatever",
@@ -282,7 +282,7 @@ def main(args) :
 
     n_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print('number of params:', n_parameters)
-    
+
     # TODO: as in https://github.com/microsoft/Cream/blob/main/AutoFormer/supernet_train.py add teacher model for distillation
     teacher_model = None
     teacher_loss = None

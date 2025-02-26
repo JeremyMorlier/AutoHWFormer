@@ -9,6 +9,8 @@ def autoformer_parser(parser: argparse.ArgumentParser) :
     # config file
     parser.add_argument('--cfg',help='experiment configure file name',required=True,type=str)
 
+    parser.add_argument('--name', default="default", type=str)
+    parser.add_argument('--logger', default="wandb", type=str)
     # custom parameters
     parser.add_argument('--platform', default='pai', type=str, choices=['itp', 'pai', 'aml'],
                         help='Name of model to train')
@@ -163,4 +165,5 @@ def autoformer_parser(parser: argparse.ArgumentParser) :
 
 def get_autoformer_argsparse(add_help=True) :
     parser = argparse.ArgumentParser(description="AutoFormer training and evaluation script", add_help=add_help)
+    autoformer_parser(parser)
     return parser
