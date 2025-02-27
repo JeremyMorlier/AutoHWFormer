@@ -29,6 +29,19 @@ from libAutoFormer.samplers import RASampler
 from datasets.autoformer_datasets import build_dataset
 from model.supernet_transformer import Vision_TransformerSuper
 
+def sample_configs(choices):
+
+    config = {}
+    dimensions = ['mlp_ratio', 'num_heads']
+    depth = random.choice(choices['depth'])
+    for dimension in dimensions:
+        config[dimension] = [random.choice(choices[dimension]) for _ in range(depth)]
+
+    config['embed_dim'] = [random.choice(choices['embed_dim'])]*depth
+
+    config['layer_num'] = depth
+    return config
+
 def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
                     data_loader: Iterable, optimizer: torch.optim.Optimizer,
                     device: torch.device, epoch: int, loss_scaler, max_norm: float = 0,
@@ -58,7 +71,7 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
 
         # sample random config
         if mode == 'super':
-            config = utils.sample_configs(choices=choices)
+            config = sample_configs(choices=choices)
             model_module = unwrap_model(model)
             model_module.set_sample_config(config=config)
         elif mode == 'retrain':
@@ -68,7 +81,7 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
         if mixup_fn is not None:
             samples, targets = mixup_fn(samples, targets)
         if amp:
-            with torch.cuda.amp.autocast():
+            with torch.amp.autocast():
                 if teacher_model:
                     with torch.no_grad():
                         teach_output = teacher_model(samples)
@@ -127,7 +140,7 @@ def evaluate(data_loader, model, device, amp=True, choices=None, mode='super', r
     # switch to evaluation mode
     model.eval()
     if mode == 'super':
-        config = utils.sample_configs(choices=choices)
+        config = sample_configs(choices=choices)
         model_module = unwrap_model(model)
         model_module.set_sample_config(config=config)
     else:
