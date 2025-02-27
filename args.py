@@ -162,7 +162,12 @@ def autoformer_parser(parser: argparse.ArgumentParser) :
     parser.add_argument('--amp', action='store_true')
     parser.add_argument('--no-amp', action='store_false', dest='amp')
     parser.set_defaults(amp=True)
-
+    parser.add_argument(
+        "--sync_bn",
+        dest="sync_bn",
+        help="Use sync batch norm",
+        action="store_true",
+    )
 def get_autoformer_argsparse(add_help=True) :
     parser = argparse.ArgumentParser(description="AutoFormer training and evaluation script", add_help=add_help)
     autoformer_parser(parser)
