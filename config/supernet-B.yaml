@@ -9,7 +9,7 @@ SEARCH_SPACE:
     - 3.5
     - 4.0
   NUM_HEADS:
-    - 9
+    - 8
     - 10
   DEPTH:
     - 14
