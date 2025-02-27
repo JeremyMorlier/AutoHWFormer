@@ -81,7 +81,7 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
         if mixup_fn is not None:
             samples, targets = mixup_fn(samples, targets)
         if amp:
-            with torch.amp.autocast():
+            with torch.autocast(device):
                 if teacher_model:
                     with torch.no_grad():
                         teach_output = teacher_model(samples)
@@ -158,7 +158,7 @@ def evaluate(data_loader, model, device, amp=True, choices=None, mode='super', r
         target = target.to(device, non_blocking=True)
         # compute output
         if amp:
-            with torch.cuda.amp.autocast():
+            with torch.autocast(device):
                 output = model(images)
                 loss = criterion(output, target)
         else:

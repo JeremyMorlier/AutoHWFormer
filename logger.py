@@ -50,7 +50,6 @@ class Logger() :
 
                         header = json.loads(lines[0])
                         if "project_name" in header and "run_name" in header :
-                            print("test")
                             write_header = False
 
                         last_log = json.loads(lines[-1])
