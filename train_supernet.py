@@ -292,9 +292,11 @@ def main(args) :
         model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu], find_unused_parameters=True)
         model_without_ddp = model.module
     
-
+    print("Torch cuda Memory allocated", torch.cuda.memory_allocated())
     n_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print('number of params:', n_parameters)
+    if utils.is_main_process() :
+        logger.log({"nparams": n_parameters, "cuda_mem_allocated": torch.cuda.memory_allocated()})
 
     # TODO: as in https://github.com/microsoft/Cream/blob/main/AutoFormer/supernet_train.py add teacher model for distillation
     teacher_model = None
@@ -359,6 +361,10 @@ def main(args) :
             teach_loss=teacher_loss,
             choices=choices, mode = args.mode, retrain_config=retrain_config,
         )
+        if utils.is_main_process() :
+            logger.log(train_stats)
+            logger.log({"cuda_mem_allocated": torch.cuda.memory_allocated()})
+        print("Torch cuda Memory allocated", torch.cuda.memory_allocated())
 
         lr_scheduler.step(epoch)
         if args.output_dir:
@@ -378,12 +384,18 @@ def main(args) :
         print(f"Accuracy of the network on the test images: {test_stats['acc1']:.1f}%")
         max_accuracy = max(max_accuracy, test_stats["acc1"])
         print(f'Max accuracy: {max_accuracy:.2f}%')
+        if utils.is_main_process() :
+            logger.log(test_stats)
+            logger.log({"max_accuracy": max_accuracy, "cuda_mem_allocated": torch.cuda.memory_allocated()})
 
         log_stats = {**{f'train_{k}': v for k, v in train_stats.items()},
                      **{f'test_{k}': v for k, v in test_stats.items()},
                      'epoch': epoch,
                      'n_parameters': n_parameters}
-
+        
+        if utils.is_main_process() :
+            logger.log(log_stats)
+            
         if args.output_dir and utils.is_main_process():
             with (output_dir / "log.txt").open("a") as f:
                 f.write(json.dumps(log_stats) + "\n")
