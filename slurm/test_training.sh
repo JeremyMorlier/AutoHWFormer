@@ -1,3 +1,4 @@
+#!/bin/bash
 #SBATCH --account             sxq@a100
 #SBATCH --constraint          a100
 #SBATCH --cpus-per-task       10
