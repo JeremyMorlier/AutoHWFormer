@@ -292,7 +292,7 @@ def main(args) :
         model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu], find_unused_parameters=True)
         model_without_ddp = model.module
     
-    print("Torch cuda Memory allocated", torch.cuda.memory_allocated())
+    print("cuda_mem_allocated", torch.cuda.memory_allocated(), "cuda_max_mem_allocated", torch.cuda.max_memory_allocated(), "cuda_mem_reserved", torch.cuda.memory_reserved(), "cuda_max_mem_reserved", torch.cuda.max_memory_reserved())
     n_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print('number of params:', n_parameters)
     if utils.is_main_process() :
@@ -364,7 +364,7 @@ def main(args) :
         if utils.is_main_process() :
             logger.log(train_stats)
             logger.log({"cuda_mem_allocated": torch.cuda.memory_allocated()})
-        print("Torch cuda Memory allocated", torch.cuda.memory_allocated())
+        print("cuda_mem_allocated", torch.cuda.memory_allocated(), "cuda_max_mem_allocated", torch.cuda.max_memory_allocated(), "cuda_mem_reserved", torch.cuda.memory_reserved(), "cuda_max_mem_reserved", torch.cuda.max_memory_reserved())
 
         lr_scheduler.step(epoch)
         if args.output_dir:
@@ -386,7 +386,7 @@ def main(args) :
         print(f'Max accuracy: {max_accuracy:.2f}%')
         if utils.is_main_process() :
             logger.log(test_stats)
-            logger.log({"max_accuracy": max_accuracy, "cuda_mem_allocated": torch.cuda.memory_allocated()})
+            logger.log({"max_accuracy": max_accuracy, "cuda_mem_allocated": torch.cuda.memory_allocated(), "cuda_max_mem_allocated": torch.cuda.max_memory_allocated(), "cuda_mem_reserved": torch.cuda.memory_reserved(), "cuda_max_mem_reserved": torch.cuda.max_memory_reserved()})
 
         log_stats = {**{f'train_{k}': v for k, v in train_stats.items()},
                      **{f'test_{k}': v for k, v in test_stats.items()},
@@ -395,7 +395,7 @@ def main(args) :
         
         if utils.is_main_process() :
             logger.log(log_stats)
-            
+
         if args.output_dir and utils.is_main_process():
             with (output_dir / "log.txt").open("a") as f:
                 f.write(json.dumps(log_stats) + "\n")
