@@ -176,7 +176,7 @@ class MetricLogger:
                     "time: {time}",
                     "data: {data}",
                     "max gpu mem: {memory:.0f}",
-                    "cpu mem available: {cpu_mem:0.f}",
+                    "cpu mem available: {cpu_mem:.0f}",
                     "cpu mem percent: {cpu_per_mem} %",
                 ]
             )
