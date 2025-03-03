@@ -168,6 +168,7 @@ def autoformer_parser(parser: argparse.ArgumentParser) :
         help="Use sync batch norm",
         action="store_true",
     )
+    
 def get_autoformer_argsparse(add_help=True) :
     parser = argparse.ArgumentParser(description="AutoFormer training and evaluation script", add_help=add_help)
     autoformer_parser(parser)
