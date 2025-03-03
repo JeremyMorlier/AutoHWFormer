@@ -19,4 +19,4 @@ conda deactivate
 
 source .venv/bin/activate
 
-srun python3 train_supernet.py --cfg config/supernet-B.yaml --output_dir results --logger txt --data-path $DSDIR/imagenet --gp --change_qk --relative_position --mode super --dist-eval  --epochs 500 --warmup-epochs 20 --batch-size 128
+srun python3 train_supernet.py --cfg config/supernet-B.yaml --output_dir results --logger txt --data-path $DSDIR/imagenet --gp --change_qk --relative_position --mode super --dist-eval  --epochs 500 --warmup-epochs 20 --batch-size 512

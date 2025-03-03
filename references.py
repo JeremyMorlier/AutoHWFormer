@@ -3,6 +3,8 @@ import time
 from collections import defaultdict, deque
 from typing import List, Optional, Tuple
 
+import psutil
+
 import torch
 
 from utils import reduce_across_processes
@@ -173,7 +175,9 @@ class MetricLogger:
                     "{meters}",
                     "time: {time}",
                     "data: {data}",
-                    "max mem: {memory:.0f}",
+                    "max gpu mem: {memory:.0f}",
+                    "cpu mem available: {cpu_mem:0.f}",
+                    "cpu mem percent: {cpu_per_mem} %",
                 ]
             )
         else:
@@ -189,6 +193,7 @@ class MetricLogger:
                 eta_seconds = iter_time.global_avg * (len(iterable) - i)
                 eta_string = str(datetime.timedelta(seconds=int(eta_seconds)))
                 if torch.cuda.is_available():
+                    mem = psutil.virtual_memory()
                     print(
                         log_msg.format(
                             i,
@@ -198,6 +203,8 @@ class MetricLogger:
                             time=str(iter_time),
                             data=str(data_time),
                             memory=torch.cuda.max_memory_allocated() / MB,
+                            cpu_mem=mem.available,
+                            cpu_per_mem=mem.percent
                         )
                     )
                 else:
