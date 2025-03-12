@@ -343,105 +343,7 @@ def evolutionary_parser(parser) :
     parser.set_defaults(amp=True)
 
 def eval_parser(parser) :
-    parser.add_argument('--batch-size', default=64, type=int)
-    # config file
-    parser.add_argument('--cfg',help='experiment configure file name',required=True,type=str)
-
-    parser.add_argument('--name', default="default", type=str)
-    parser.add_argument('--logger', default="wandb", type=str)
-    # custom parameters
-    parser.add_argument('--platform', default='pai', type=str, choices=['itp', 'pai', 'aml'],
-                        help='Name of model to train')
-    parser.add_argument('--teacher_model', default='', type=str,
-                        help='Name of teacher model to train')
-    parser.add_argument('--relative_position', action='store_true')
-    parser.add_argument('--gp', action='store_true')
-    parser.add_argument('--change_qkv', action='store_true')
-    parser.add_argument('--max_relative_position', type=int, default=14, help='max distance in relative position embedding')
-
-    # Model parameters
-    parser.add_argument('--model', default='', type=str, metavar='MODEL',
-                        help='Name of model to train')
-    # AutoFormer config
-    parser.add_argument('--mode', type=str, default='super', choices=['super', 'retrain'], help='mode of AutoFormer')
-    parser.add_argument('--input-size', default=224, type=int)
-    parser.add_argument('--patch_size', default=16, type=int)
-    parser.add_argument('--drop', type=float, default=0.0, metavar='PCT',
-                        help='Dropout rate (default: 0.)')
-    parser.add_argument('--drop-path', type=float, default=0.1, metavar='PCT',
-                        help='Drop path rate (default: 0.1)')
-    parser.add_argument('--drop-block', type=float, default=None, metavar='PCT',
-                        help='Drop block rate (default: None)')
-    # Dataset parameters
-    parser.add_argument('--data-path', default='./data/imagenet/', type=str,
-                        help='dataset path')
-    parser.add_argument('--data-set', default='IMNET', choices=['CIFAR', 'IMNET', 'INAT', 'INAT19'],
-                        type=str, help='Image Net dataset path')
-    parser.add_argument('--inat-category', default='name',
-                        choices=['kingdom', 'phylum', 'class', 'order', 'supercategory', 'family', 'genus', 'name'],
-                        type=str, help='semantic granularity')
-    # Augmentation parameters
-    parser.add_argument('--color-jitter', type=float, default=0.4, metavar='PCT',
-                        help='Color jitter factor (default: 0.4)')
-    parser.add_argument('--aa', type=str, default='rand-m9-mstd0.5-inc1', metavar='NAME',
-                        help='Use AutoAugment policy. "v0" or "original". " + \
-                             "(default: rand-m9-mstd0.5-inc1)'),
-    parser.add_argument('--smoothing', type=float, default=0.1, help='Label smoothing (default: 0.1)')
-    parser.add_argument('--train-interpolation', type=str, default='bicubic',
-                        help='Training interpolation (random, bilinear, bicubic default: "bicubic")')
-
-    parser.add_argument('--repeated-aug', action='store_true')
-    parser.add_argument('--no-repeated-aug', action='store_false', dest='repeated_aug')
-
-
-    parser.set_defaults(repeated_aug=True)
-
-    # * Random Erase params
-    parser.add_argument('--reprob', type=float, default=0.25, metavar='PCT',
-                        help='Random erase prob (default: 0.25)')
-    parser.add_argument('--remode', type=str, default='pixel',
-                        help='Random erase mode (default: "pixel")')
-    parser.add_argument('--recount', type=int, default=1,
-                        help='Random erase count (default: 1)')
-    parser.add_argument('--resplit', action='store_true', default=False,
-                        help='Do not random erase first (clean) augmentation split')
-
-    # * Mixup params
-    parser.add_argument('--mixup', type=float, default=0.8,
-                        help='mixup alpha, mixup enabled if > 0. (default: 0.8)')
-    parser.add_argument('--cutmix', type=float, default=1.0,
-                        help='cutmix alpha, cutmix enabled if > 0. (default: 1.0)')
-    parser.add_argument('--cutmix-minmax', type=float, nargs='+', default=None,
-                        help='cutmix min/max ratio, overrides alpha and enables cutmix if set (default: None)')
-    parser.add_argument('--mixup-prob', type=float, default=1.0,
-                        help='Probability of performing mixup or cutmix when either/both is enabled')
-    parser.add_argument('--mixup-switch-prob', type=float, default=0.5,
-                        help='Probability of switching to cutmix when both mixup and cutmix enabled')
-    parser.add_argument('--mixup-mode', type=str, default='batch',
-                        help='How to apply mixup/cutmix params. Per "batch", "pair", or "elem"')
-
-    parser.add_argument('--no-prefetcher', action='store_true', default=False,
-                        help='disable fast prefetcher')
-    parser.add_argument('--output_dir', default='',
-                        help='path where to save, empty for no saving')
-    parser.add_argument('--device', default='cuda',
-                        help='device to use for training / testing')
-  
-    parser.add_argument('--num_workers', default=10, type=int)
-    parser.add_argument('--dist-eval', action='store_true', default=False, help='Enabling distributed evaluation')
-    parser.add_argument('--pin-mem', action='store_true',
-                        help='Pin CPU memory in DataLoader for more efficient (sometimes) transfer to GPU.')
-    parser.add_argument('--no-pin-mem', action='store_false', dest='pin_mem',
-                        help='')
-    parser.set_defaults(pin_mem=True)
-
-    # distributed training parameters
-    parser.add_argument('--world_size', default=1, type=int,
-                        help='number of distributed processes')
-    
-    parser.add_argument('--amp', action='store_true')
-    parser.add_argument('--no-amp', action='store_false', dest='amp')
-    parser.set_defaults(amp=True)
+    parser.add_argument("--n_models", default=100, type=int, help="bnumber of subnets to evaluate")
 
 def get_evolutionary_argsparse(add_help=True) :
     parser = argparse.ArgumentParser(description="AutoFormer evolutionary search script", add_help=add_help)
@@ -455,5 +357,6 @@ def get_autoformer_argsparse(add_help=True) :
 
 def get_eval_argparse(add_help=True) :
     parser = argparse.ArgumentParser(description="AutoFormer subnets evaluation script", add_help=add_help)
+    autoformer_parser(parser)
     eval_parser(parser)
     return parser
