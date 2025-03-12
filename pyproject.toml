@@ -7,6 +7,7 @@ requires-python = ">=3.12"
 dependencies = [
     "easydict>=1.13",
     "gdown>=5.2.0",
+    "onnxscript>=0.2.2",
     "opencv-python>=4.11.0.86",
     "psutil>=7.0.0",
     "python-hostlist>=2.2.1",
@@ -14,4 +15,5 @@ dependencies = [
     "timm>=1.0.15",
     "torch==2.5.0",
     "wandb>=0.19.6",
+    "zigzag-dse>=3.8.1",
 ]
