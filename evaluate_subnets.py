@@ -45,6 +45,9 @@ def main(args) :
     print(device)
     update_config_from_file(args.cfg)
 
+    choices = {'num_heads': cfg.SEARCH_SPACE.NUM_HEADS, 'mlp_ratio': cfg.SEARCH_SPACE.MLP_RATIO,
+            'embed_dim': cfg.SEARCH_SPACE.EMBED_DIM , 'depth': cfg.SEARCH_SPACE.DEPTH}
+    
     if utils.is_main_process() :
         # similar API to wandb except mode and log_dir
         logger = Logger(project_name="HWAutoFormerEval",
@@ -91,7 +94,7 @@ def main(args) :
 
     # Evaluate on  performance and hardware characteristics
     for k in range(0, args.n_models) :
-        test_stats = evaluate(data_loader_val, model, device,  mode = args.mode, retrain_config=None)
+        test_stats = evaluate(data_loader_val, model, device, choices=choices,  mode = args.mode, retrain_config=None)
         hardware_stats = evaluate_hardware(model, args.mapping, args.accelerator, args.output_dir)
         print(f"Accuracy of the network on the test images: {test_stats['acc1']:.1f}% ZigZag energy {hardware_stats["energy"]}, ZigZag Latency {hardware_stats["latency"]}")
 
