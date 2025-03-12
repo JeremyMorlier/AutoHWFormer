@@ -366,7 +366,12 @@ def eval_parser(parser) :
     parser.add_argument('--mode', type=str, default='super', choices=['super', 'retrain'], help='mode of AutoFormer')
     parser.add_argument('--input-size', default=224, type=int)
     parser.add_argument('--patch_size', default=16, type=int)
-
+    parser.add_argument('--drop', type=float, default=0.0, metavar='PCT',
+                        help='Dropout rate (default: 0.)')
+    parser.add_argument('--drop-path', type=float, default=0.1, metavar='PCT',
+                        help='Drop path rate (default: 0.1)')
+    parser.add_argument('--drop-block', type=float, default=None, metavar='PCT',
+                        help='Drop block rate (default: None)')
     # Dataset parameters
     parser.add_argument('--data-path', default='./data/imagenet/', type=str,
                         help='dataset path')
