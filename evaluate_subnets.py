@@ -42,6 +42,7 @@ def main(args) :
     utils.init_signal_handler()
 
     device = torch.device(args.device)
+    print(device)
     update_config_from_file(args.cfg)
 
     if utils.is_main_process() :
