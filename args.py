@@ -343,7 +343,9 @@ def evolutionary_parser(parser) :
     parser.set_defaults(amp=True)
 
 def eval_parser(parser) :
-    parser.add_argument("--n_models", default=100, type=int, help="bnumber of subnets to evaluate")
+    parser.add_argument("--n_models", default=100, type=int, help="number of subnets to evaluate")
+    parser.add_argument("--mapping", type=str, required=True, help="Path to ZigZag Mapping of the neural network")
+    parser.add_argument("--accelerator", type=str, required=True, help="Path to ZigZag Accelerator")
 
 def get_evolutionary_argsparse(add_help=True) :
     parser = argparse.ArgumentParser(description="AutoFormer evolutionary search script", add_help=add_help)
