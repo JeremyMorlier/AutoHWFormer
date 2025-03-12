@@ -216,7 +216,12 @@ def evolutionary_parser(parser) :
     # parser.set_defaults(model_ema=True)
     parser.add_argument('--model-ema-decay', type=float, default=0.99996, help='')
     parser.add_argument('--model-ema-force-cpu', action='store_true', default=False, help='')
-
+    parser.add_argument('--drop', type=float, default=0.0, metavar='PCT',
+                        help='Dropout rate (default: 0.)')
+    parser.add_argument('--drop-path', type=float, default=0.1, metavar='PCT',
+                        help='Drop path rate (default: 0.1)')
+    parser.add_argument('--drop-block', type=float, default=None, metavar='PCT',
+                        help='Drop block rate (default: None)')
     # custom model argument
     parser.add_argument('--rpe_type', type=str, default='bias', choices=['bias', 'direct'])
     parser.add_argument('--post_norm', action='store_true')
