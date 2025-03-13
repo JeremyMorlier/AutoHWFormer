@@ -18,7 +18,7 @@ class PatchembedSuper(nn.Module):
         self.super_embed_dim = embed_dim
         self.scale = scale
 
-    # sampled_
+        # sampled_
         self.sample_embed_dim = None
         self.sampled_weight = None
         self.sampled_bias = None
