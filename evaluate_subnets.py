@@ -103,7 +103,7 @@ def main(args) :
             block.attn_layer_norm.samples['weight'] = block.attn_layer_norm.samples['weight'].detach()
             block.attn_layer_norm.samples['bias'] = block.attn_layer_norm.samples['bias'].detach()
         hardware_stats = evaluate_hardware(model, args.mapping, args.accelerator, args.output_dir)
-        print(f"Accuracy of the network on the test images: {test_stats['acc1']:.1f}% ZigZag energy {hardware_stats["energy"]:.1f}, ZigZag Latency {hardware_stats["latency"]:.1f}")
+        print(f"Accuracy of the network on the test images: {test_stats['acc1']:.1f}% ZigZag energy {hardware_stats['energy']:.1f}, ZigZag Latency {hardware_stats['latency']:.1f}")
 
 if __name__ == "__main__" :
     parser = get_eval_argparse()
