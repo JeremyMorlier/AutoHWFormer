@@ -94,7 +94,9 @@ def main(args) :
 
     # Evaluate on  performance and hardware characteristics
     for k in range(0, args.n_models) :
-        test_stats = evaluate(data_loader_val, model, device, choices=choices,  mode = args.mode, retrain_config=None)
+        # test_stats = evaluate(data_loader_val, model, device, choices=choices,  mode = args.mode, retrain_config=None)
+        config = sample_configs(choices=choices)
+        model_without_ddp.set_sample_config(config=config)
         # for parameter in model.parameters() :
         #     parameter = parameter.detach()
         model_without_ddp.patch_embed_super.sampled_weight = model_without_ddp.patch_embed_super.sampled_weight.detach()
@@ -103,8 +105,27 @@ def main(args) :
             # print(block.attn_layer_norm.samples)
             block.attn_layer_norm.samples['weight'] = block.attn_layer_norm.samples['weight'].detach()
             block.attn_layer_norm.samples['bias'] = block.attn_layer_norm.samples['bias'].detach()
+
+            block.ffn_layer_norm.samples['weight'] = block.ffn_layer_norm.samples['weight'].detach()
+            block.ffn_layer_norm.samples['bias'] = block.ffn_layer_norm.samples['bias'].detach()
+
+            block.attn.qkv.samples['weight'] = block.attn.qkv.samples['weight'].detach()
+            block.attn.qkv.samples['bias'] = block.attn.qkv.samples['bias'].detach()
+            block.attn.qkv.samples['scale'] = block.attn.qkv.samples['scale'].detach()
+            block.attn.proj.samples['weight'] = block.attn.proj.samples['weight'].detach()
+            block.attn.proj.samples['bias'] = block.attn.proj.samples['bias'].detach()
+            block.attn.proj.samples['scale'] = block.attn.proj.samples['scale'].detach()
+
+            block.fc1.samples['weight'] = block.fc1.samples['weight'].detach()
+            block.fc1.samples['bias'] = block.fc1.samples['bias'].detach()
+            block.fc1.samples['scale'] = block.fc1.samples['scale'].detach()
+            block.fc2.samples['weight'] = block.fc2.samples['weight'].detach()
+            block.fc2.samples['bias'] = block.fc2.samples['bias'].detach()
+            block.fc2.samples['scale'] = block.fc2.samples['scale'].detach()
+
         hardware_stats = evaluate_hardware(model, args.mapping, args.accelerator, args.output_dir)
-        print(f"Accuracy of the network on the test images: {test_stats['acc1']:.1f}% ZigZag energy {hardware_stats['energy']:.1f}, ZigZag Latency {hardware_stats['latency']:.1f}")
+        # print(f"Accuracy of the network on the test images: {test_stats['acc1']:.1f}% ZigZag energy {hardware_stats['energy']:.1f}, ZigZag Latency {hardware_stats['latency']:.1f}")
+        print(f"Accuracy of the network on the test images: ZigZag energy {hardware_stats['energy']:.1f}, ZigZag Latency {hardware_stats['latency']:.1f}")
 
 if __name__ == "__main__" :
     parser = get_eval_argparse()
