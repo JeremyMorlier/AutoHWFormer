@@ -95,8 +95,13 @@ def main(args) :
     # Evaluate on  performance and hardware characteristics
     for k in range(0, args.n_models) :
         test_stats = evaluate(data_loader_val, model, device, choices=choices,  mode = args.mode, retrain_config=None)
-        model_without_ddp.patch_embed_super.sampled_weight = model_without_ddp.patch_embed_super.sampled_weight.detach()
-        model_without_ddp.patch_embed_super.sampled_bias = model_without_ddp.patch_embed_super.sampled_bias.detach()
+        for parameter in model.parameters() :
+            parameter = parameter.detach()
+        # model_without_ddp.patch_embed_super.sampled_weight = model_without_ddp.patch_embed_super.sampled_weight.detach()
+        # model_without_ddp.patch_embed_super.sampled_bias = model_without_ddp.patch_embed_super.sampled_bias.detach()
+        # for block in model_without_ddp.blocks :
+        #     block.attn_layer_norm.samples['weight'] = block.attn_layer_norm.detach()
+        #     block.attn_layer_norm.samples['weight'] = block.attn_layer_norm.detach()
         hardware_stats = evaluate_hardware(model, args.mapping, args.accelerator, args.output_dir)
         print(f"Accuracy of the network on the test images: {test_stats['acc1']:.1f}% ZigZag energy {hardware_stats["energy"]}, ZigZag Latency {hardware_stats["latency"]}")
 
