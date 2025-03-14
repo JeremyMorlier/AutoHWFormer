@@ -117,10 +117,10 @@ def main(args) :
                 if "weight" in block.attn.proj.samples.keys() :
                     block.attn.proj.samples['weight'] = block.attn.proj.samples['weight'].detach()
                     block.attn.proj.samples['bias'] = block.attn.proj.samples['bias'].detach()
-                block.attn.rel_pos_embed_k.sample_embeddings_table_v = block.attn.rel_pos_embed_k.sample_embeddings_table_v.detach()
-                block.attn.rel_pos_embed_k.sample_embeddings_table_v = block.attn.rel_pos_embed_k.sample_embeddings_table_v.detach()
-                block.attn.rel_pos_embed_k.sample_embeddings_table_h = block.attn.rel_pos_embed_k.sample_embeddings_table_h.detach()
-                block.attn.rel_pos_embed_k.sample_embeddings_table_h = block.attn.rel_pos_embed_k.sample_embeddings_table_h.detach()
+                # block.attn.rel_pos_embed_k.sample_embeddings_table_v = block.attn.rel_pos_embed_k.sample_embeddings_table_v.detach()
+                # block.attn.rel_pos_embed_k.sample_embeddings_table_v = block.attn.rel_pos_embed_k.sample_embeddings_table_v.detach()
+                # block.attn.rel_pos_embed_k.sample_embeddings_table_h = block.attn.rel_pos_embed_k.sample_embeddings_table_h.detach()
+                # block.attn.rel_pos_embed_k.sample_embeddings_table_h = block.attn.rel_pos_embed_k.sample_embeddings_table_h.detach()
 
             # block.attn.rel_pos_embed_k.final_mat_v = block.attn.rel_pos_embed_k.final_mat_v.detach()
             # block.attn.rel_pos_embed_k.final_mat_v = block.attn.rel_pos_embed_k.final_mat_v.detach()
