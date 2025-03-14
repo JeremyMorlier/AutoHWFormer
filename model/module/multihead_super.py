@@ -58,8 +58,8 @@ class RelativePosition2D_super(nn.Module):
         final_mat_v = torch.nn.functional.pad(final_mat_v, (1,0,1,0), "constant", 0)
         final_mat_h = torch.nn.functional.pad(final_mat_h, (1,0,1,0), "constant", 0)
 
-        final_mat_v = final_mat_v.long()
-        final_mat_h = final_mat_h.long()
+        final_mat_v = final_mat_v.long().detach()
+        final_mat_h = final_mat_h.long().detach()
         # get the embeddings with the corresponding distance
         embeddings = self.sample_embeddings_table_v[final_mat_v] + self.sample_embeddings_table_h[final_mat_h]
 
