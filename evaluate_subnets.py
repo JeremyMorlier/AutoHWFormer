@@ -118,10 +118,10 @@ def main(args) :
             block.attn.rel_pos_embed_k.sample_embeddings_table_h = block.attn.rel_pos_embed_k.sample_embeddings_table_h.detach()
             block.attn.rel_pos_embed_k.sample_embeddings_table_h = block.attn.rel_pos_embed_k.sample_embeddings_table_h.detach()
 
-            block.attn.rel_pos_embed_k.final_mat_v = block.attn.rel_pos_embed_k.final_mat_v.detach()
-            block.attn.rel_pos_embed_k.final_mat_v = block.attn.rel_pos_embed_k.final_mat_v.detach()
-            block.attn.rel_pos_embed_k.final_mat_h = block.attn.rel_pos_embed_k.final_mat_h.detach()
-            block.attn.rel_pos_embed_k.final_mat_h = block.attn.rel_pos_embed_k.final_mat_h.detach()
+            # block.attn.rel_pos_embed_k.final_mat_v = block.attn.rel_pos_embed_k.final_mat_v.detach()
+            # block.attn.rel_pos_embed_k.final_mat_v = block.attn.rel_pos_embed_k.final_mat_v.detach()
+            # block.attn.rel_pos_embed_k.final_mat_h = block.attn.rel_pos_embed_k.final_mat_h.detach()
+            # block.attn.rel_pos_embed_k.final_mat_h = block.attn.rel_pos_embed_k.final_mat_h.detach()
             # block.attn.proj.sample_scale = block.attn.proj.sample_scale.detach()
 
             block.fc1.samples['weight'] = block.fc1.samples['weight'].detach()
