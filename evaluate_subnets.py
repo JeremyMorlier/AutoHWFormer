@@ -118,7 +118,7 @@ def main(args) :
 
             block.fc1.samples['weight'] = block.fc1.samples['weight'].detach()
             block.fc1.samples['bias'] = block.fc1.samples['bias'].detach()
-            block.fc1.sample_scale = block.fc1.sample_scale.detach()
+            # block.fc1.sample_scale = block.fc1.sample_scale.detach()
             block.fc2.samples['weight'] = block.fc2.samples['weight'].detach()
             block.fc2.samples['bias'] = block.fc2.samples['bias'].detach()
             # block.fc2.sample_scale = block.fc2.sample_scale.detach()
