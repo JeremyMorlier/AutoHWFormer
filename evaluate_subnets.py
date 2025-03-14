@@ -102,17 +102,19 @@ def main(args) :
         model_without_ddp.patch_embed_super.sampled_bias = model_without_ddp.patch_embed_super.sampled_bias.detach()
         for block in model_without_ddp.blocks :
             # print(block.attn_layer_norm.samples)
-            block.attn_layer_norm.samples['weight'] = block.attn_layer_norm.samples['weight'].detach()
-            block.attn_layer_norm.samples['bias'] = block.attn_layer_norm.samples['bias'].detach()
-
-            block.ffn_layer_norm.samples['weight'] = block.ffn_layer_norm.samples['weight'].detach()
-            block.ffn_layer_norm.samples['bias'] = block.ffn_layer_norm.samples['bias'].detach()
-
-            block.attn.qkv.samples['weight'] = block.attn.qkv.samples['weight'].detach()
-            block.attn.qkv.samples['bias'] = block.attn.qkv.samples['bias'].detach()
+            if "weight" in block.attn_layer_norm.samples.keys() :
+                block.attn_layer_norm.samples['weight'] = block.attn_layer_norm.samples['weight'].detach()
+                block.attn_layer_norm.samples['bias'] = block.attn_layer_norm.samples['bias'].detach()
+            if "weight" in block.ffn_layer_norm.samples.keys() :
+                block.ffn_layer_norm.samples['weight'] = block.ffn_layer_norm.samples['weight'].detach()
+                block.ffn_layer_norm.samples['bias'] = block.ffn_layer_norm.samples['bias'].detach()
+            if "weight" in block.attn.qkv.samples.keys() :
+                block.attn.qkv.samples['weight'] = block.attn.qkv.samples['weight'].detach()
+                block.attn.qkv.samples['bias'] = block.attn.qkv.samples['bias'].detach()
             # block.attn.qkv.sample_scale = block.attn.qkv.sample_scale.detach()
-            block.attn.proj.samples['weight'] = block.attn.proj.samples['weight'].detach()
-            block.attn.proj.samples['bias'] = block.attn.proj.samples['bias'].detach()
+            if "weight" in block.attn.proj.samples.keys() :
+                block.attn.proj.samples['weight'] = block.attn.proj.samples['weight'].detach()
+                block.attn.proj.samples['bias'] = block.attn.proj.samples['bias'].detach()
             block.attn.rel_pos_embed_k.sample_embeddings_table_v = block.attn.rel_pos_embed_k.sample_embeddings_table_v.detach()
             block.attn.rel_pos_embed_k.sample_embeddings_table_v = block.attn.rel_pos_embed_k.sample_embeddings_table_v.detach()
             block.attn.rel_pos_embed_k.sample_embeddings_table_h = block.attn.rel_pos_embed_k.sample_embeddings_table_h.detach()
