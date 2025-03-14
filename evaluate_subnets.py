@@ -94,6 +94,7 @@ def main(args) :
 
     # Evaluate on  performance and hardware characteristics
     for k in range(0, args.n_models) :
+        print(k)
         # test_stats = evaluate(data_loader_val, model, device, choices=choices,  mode = args.mode, retrain_config=None)
         config = sample_configs(choices=choices)
         model_without_ddp.set_sample_config(config=config)
