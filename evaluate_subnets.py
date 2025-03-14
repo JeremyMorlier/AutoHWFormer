@@ -100,6 +100,7 @@ def main(args) :
         model_without_ddp.patch_embed_super.sampled_weight = model_without_ddp.patch_embed_super.sampled_weight.detach()
         model_without_ddp.patch_embed_super.sampled_bias = model_without_ddp.patch_embed_super.sampled_bias.detach()
         for block in model_without_ddp.blocks :
+            print(block)
             block.attn_layer_norm.samples['weight'] = block.attn_layer_norm.samples['weight'].detach()
             block.attn_layer_norm.samples['bias'] = block.attn_layer_norm.samples['bias'].detach()
         hardware_stats = evaluate_hardware(model, args.mapping, args.accelerator, args.output_dir)
