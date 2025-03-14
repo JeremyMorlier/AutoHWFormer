@@ -101,7 +101,8 @@ def main(args) :
 
         model_without_ddp.patch_embed_super.sampled_weight = model_without_ddp.patch_embed_super.sampled_weight.detach()
         model_without_ddp.patch_embed_super.sampled_bias = model_without_ddp.patch_embed_super.sampled_bias.detach()
-        for block in model_without_ddp.blocks :
+        for i, (block) in enumerate(model_without_ddp.blocks) :
+            print(i)
             # print(block.attn_layer_norm.samples)
             if "weight" in block.attn_layer_norm.samples.keys() :
                 block.attn_layer_norm.samples['weight'] = block.attn_layer_norm.samples['weight'].detach()
