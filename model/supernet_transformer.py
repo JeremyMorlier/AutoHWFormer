@@ -1,4 +1,5 @@
 import math
+import time
 
 import torch
 import torch.nn as nn
@@ -260,7 +261,7 @@ class TransformerEncoderLayer(nn.Module):
             return x
 
         # compute attn
-        # start_time = time.time()
+        start_time = time.time()
 
         residual = x
         x = self.maybe_layer_norm(self.attn_layer_norm, x, before=True)
@@ -269,9 +270,9 @@ class TransformerEncoderLayer(nn.Module):
         x = self.drop_path(x)
         x = residual + x
         x = self.maybe_layer_norm(self.attn_layer_norm, x, after=True)
-        # print("attn :", time.time() - start_time)
+        print("attn :", time.time() - start_time)
         # compute the ffn
-        # start_time = time.time()
+        start_time = time.time()
         residual = x
         x = self.maybe_layer_norm(self.ffn_layer_norm, x, before=True)
         x = self.activation_fn(self.fc1(x))
@@ -283,7 +284,7 @@ class TransformerEncoderLayer(nn.Module):
         x = self.drop_path(x)
         x = residual + x
         x = self.maybe_layer_norm(self.ffn_layer_norm, x, after=True)
-        # print("ffn :", time.time() - start_time)
+        print("ffn :", time.time() - start_time)
         return x
 
     def maybe_layer_norm(self, layer_norm, x, before=False, after=False):

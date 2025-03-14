@@ -114,6 +114,7 @@ def main(args) :
             # block.attn.qkv.sample_scale = block.attn.qkv.sample_scale.detach()
             block.attn.proj.samples['weight'] = block.attn.proj.samples['weight'].detach()
             block.attn.proj.samples['bias'] = block.attn.proj.samples['bias'].detach()
+            block.attn.sample_embeddings_table_v = block.attn.sample_embeddings_table_v.detach()
             # block.attn.proj.sample_scale = block.attn.proj.sample_scale.detach()
 
             block.fc1.samples['weight'] = block.fc1.samples['weight'].detach()
@@ -121,6 +122,8 @@ def main(args) :
             # block.fc1.sample_scale = block.fc1.sample_scale.detach()
             block.fc2.samples['weight'] = block.fc2.samples['weight'].detach()
             block.fc2.samples['bias'] = block.fc2.samples['bias'].detach()
+        model_without_ddp.head.samples['weight'] = model_without_ddp.head.samples['weight'].detach()
+        model_without_ddp.head.samples['bias'] = model_without_ddp.head.samples['bias'].detach()
             # block.fc2.sample_scale = block.fc2.sample_scale.detach()
 
         hardware_stats = evaluate_hardware(model, args.mapping, args.accelerator, args.output_dir)
