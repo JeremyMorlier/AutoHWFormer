@@ -111,17 +111,17 @@ def main(args) :
 
             block.attn.qkv.samples['weight'] = block.attn.qkv.samples['weight'].detach()
             block.attn.qkv.samples['bias'] = block.attn.qkv.samples['bias'].detach()
-            block.attn.qkv.sample_scale = block.attn.qkv.sample_scale.detach()
+            # block.attn.qkv.sample_scale = block.attn.qkv.sample_scale.detach()
             block.attn.proj.samples['weight'] = block.attn.proj.samples['weight'].detach()
             block.attn.proj.samples['bias'] = block.attn.proj.samples['bias'].detach()
-            block.attn.proj.sample_scale = block.attn.proj.sample_scale.detach()
+            # block.attn.proj.sample_scale = block.attn.proj.sample_scale.detach()
 
             block.fc1.samples['weight'] = block.fc1.samples['weight'].detach()
             block.fc1.samples['bias'] = block.fc1.samples['bias'].detach()
             block.fc1.sample_scale = block.fc1.sample_scale.detach()
             block.fc2.samples['weight'] = block.fc2.samples['weight'].detach()
             block.fc2.samples['bias'] = block.fc2.samples['bias'].detach()
-            block.fc2.sample_scale = block.fc2.sample_scale.detach()
+            # block.fc2.sample_scale = block.fc2.sample_scale.detach()
 
         hardware_stats = evaluate_hardware(model, args.mapping, args.accelerator, args.output_dir)
         # print(f"Accuracy of the network on the test images: {test_stats['acc1']:.1f}% ZigZag energy {hardware_stats['energy']:.1f}, ZigZag Latency {hardware_stats['latency']:.1f}")
