@@ -97,8 +97,7 @@ def main(args) :
         # test_stats = evaluate(data_loader_val, model, device, choices=choices,  mode = args.mode, retrain_config=None)
         config = sample_configs(choices=choices)
         model_without_ddp.set_sample_config(config=config)
-        for parameter in model.parameters() :
-            parameter.detach_()
+
         model_without_ddp.patch_embed_super.sampled_weight = model_without_ddp.patch_embed_super.sampled_weight.detach()
         model_without_ddp.patch_embed_super.sampled_bias = model_without_ddp.patch_embed_super.sampled_bias.detach()
         for block in model_without_ddp.blocks :
@@ -118,6 +117,11 @@ def main(args) :
             block.attn.rel_pos_embed_k.sample_embeddings_table_v = block.attn.rel_pos_embed_k.sample_embeddings_table_v.detach()
             block.attn.rel_pos_embed_k.sample_embeddings_table_h = block.attn.rel_pos_embed_k.sample_embeddings_table_h.detach()
             block.attn.rel_pos_embed_k.sample_embeddings_table_h = block.attn.rel_pos_embed_k.sample_embeddings_table_h.detach()
+
+            block.attn.rel_pos_embed_k.final_mat_v = block.attn.rel_pos_embed_k.final_mat_v.detach()
+            block.attn.rel_pos_embed_k.final_mat_v = block.attn.rel_pos_embed_k.final_mat_v.detach()
+            block.attn.rel_pos_embed_k.final_mat_h = block.attn.rel_pos_embed_k.final_mat_h.detach()
+            block.attn.rel_pos_embed_k.final_mat_h = block.attn.rel_pos_embed_k.final_mat_h.detach()
             # block.attn.proj.sample_scale = block.attn.proj.sample_scale.detach()
 
             block.fc1.samples['weight'] = block.fc1.samples['weight'].detach()
