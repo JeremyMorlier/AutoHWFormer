@@ -357,6 +357,11 @@ def get_autoformer_argsparse(add_help=True) :
     autoformer_parser(parser)
     return parser
 
+def get_profile_argparse(add_help=True) :
+    parser = argparse.ArgumentParser(description="AutoFormer profile script", add_help=add_help)
+    autoformer_parser(parser)
+    return parser
+
 def get_eval_argparse(add_help=True) :
     parser = argparse.ArgumentParser(description="AutoFormer subnets evaluation script", add_help=add_help)
     autoformer_parser(parser)

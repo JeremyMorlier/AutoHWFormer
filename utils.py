@@ -83,6 +83,7 @@ def init_distributed_mode(args):
         pass
     else:
         print("Not using distributed mode")
+        args.device = "cuda" if torch.cuda.is_available() else "cpu"
         args.distributed = False
         return
 

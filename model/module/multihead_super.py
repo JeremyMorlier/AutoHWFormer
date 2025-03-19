@@ -5,6 +5,8 @@ import torch.nn.functional as F
 from .Linear_super import LinearSuper
 from .qkv_super import qkv_super
 from ..utils import trunc_normal_
+
+from torch.profiler import record_function
 def softmax(x, dim, onnx_trace=False):
     if onnx_trace:
         return F.softmax(x.float(), dim=dim)
@@ -131,31 +133,32 @@ class AttentionSuper(nn.Module):
         return total_flops
 
     def forward(self, x):
-        B, N, C = x.shape
+        with record_function("attn") :
+            B, N, C = x.shape
 
-        qkv = self.qkv(x).reshape(B, N, 3, self.sample_num_heads, -1).permute(2, 0, 3, 1, 4)
-        q, k, v = qkv[0], qkv[1], qkv[2]   # make torchscript happy (cannot use tensor as tuple)
+            qkv = self.qkv(x).reshape(B, N, 3, self.sample_num_heads, -1).permute(2, 0, 3, 1, 4)
+            q, k, v = qkv[0], qkv[1], qkv[2]   # make torchscript happy (cannot use tensor as tuple)
 
-        attn = (q @ k.transpose(-2, -1)) * self.sample_scale
-        if self.relative_position:
-            r_p_k = self.rel_pos_embed_k(N, N)
-            attn = attn + (q.permute(2, 0, 1, 3).reshape(N, self.sample_num_heads * B, -1) @ r_p_k.transpose(2, 1)) \
-                .transpose(1, 0).reshape(B, self.sample_num_heads, N, N) * self.sample_scale
+            attn = (q @ k.transpose(-2, -1)) * self.sample_scale
+            if self.relative_position:
+                r_p_k = self.rel_pos_embed_k(N, N)
+                attn = attn + (q.permute(2, 0, 1, 3).reshape(N, self.sample_num_heads * B, -1) @ r_p_k.transpose(2, 1)) \
+                    .transpose(1, 0).reshape(B, self.sample_num_heads, N, N) * self.sample_scale
 
-        attn = attn.softmax(dim=-1)
-        attn = self.attn_drop(attn)
+            attn = attn.softmax(dim=-1)
+            attn = self.attn_drop(attn)
 
-        x = (attn @ v).transpose(1,2).reshape(B, N, -1)
-        if self.relative_position:
-            r_p_v = self.rel_pos_embed_v(N, N)
-            attn_1 = attn.permute(2, 0, 1, 3).reshape(N, B * self.sample_num_heads, -1)
-            # The size of attention is (B, num_heads, N, N), reshape it to (N, B*num_heads, N) and do batch matmul with
-            # the relative position embedding of V (N, N, head_dim) get shape like (N, B*num_heads, head_dim). We reshape it to the
-            # same size as x (B, num_heads, N, hidden_dim)
-            x = x + (attn_1 @ r_p_v).transpose(1, 0).reshape(B, self.sample_num_heads, N, -1).transpose(2,1).reshape(B, N, -1)
+            x = (attn @ v).transpose(1,2).reshape(B, N, -1)
+            if self.relative_position:
+                r_p_v = self.rel_pos_embed_v(N, N)
+                attn_1 = attn.permute(2, 0, 1, 3).reshape(N, B * self.sample_num_heads, -1)
+                # The size of attention is (B, num_heads, N, N), reshape it to (N, B*num_heads, N) and do batch matmul with
+                # the relative position embedding of V (N, N, head_dim) get shape like (N, B*num_heads, head_dim). We reshape it to the
+                # same size as x (B, num_heads, N, hidden_dim)
+                x = x + (attn_1 @ r_p_v).transpose(1, 0).reshape(B, self.sample_num_heads, N, -1).transpose(2,1).reshape(B, N, -1)
 
-        if self.fc_scale:
-            x = x * (self.super_embed_dim / self.sample_qk_embed_dim)
-        x = self.proj(x)
-        x = self.proj_drop(x)
+            if self.fc_scale:
+                x = x * (self.super_embed_dim / self.sample_qk_embed_dim)
+            x = self.proj(x)
+            x = self.proj_drop(x)
         return x

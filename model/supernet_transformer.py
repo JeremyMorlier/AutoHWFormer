@@ -12,6 +12,7 @@ from model.utils import trunc_normal_
 from model.utils import DropPath
 import numpy as np
 
+from torch.profiler import record_function
 def gelu(x: torch.Tensor) -> torch.Tensor:
     if hasattr(torch.nn.functional, 'gelu'):
         return torch.nn.functional.gelu(x.float()).type_as(x)
@@ -23,7 +24,8 @@ class Vision_TransformerSuper(nn.Module):
 
     def __init__(self, img_size=224, patch_size=16, in_chans=3, num_classes=1000, embed_dim=768, depth=12,
                  num_heads=12, mlp_ratio=4., qkv_bias=False, qk_scale=None, drop_rate=0., attn_drop_rate=0.,
-                 drop_path_rate=0., pre_norm=True, scale=False, gp=False, relative_position=False, change_qkv=False, abs_pos = True, max_relative_position=14):
+                 drop_path_rate=0., pre_norm=True, scale=False, gp=False, relative_position=False, change_qkv=False, 
+                 abs_pos = True, max_relative_position=14, profile=False):
         super(Vision_TransformerSuper, self).__init__()
         # the configs of super arch
         self.super_embed_dim = embed_dim
@@ -80,6 +82,7 @@ class Vision_TransformerSuper(nn.Module):
 
         self.apply(self._init_weights)
 
+        self.profile = profile
     def _init_weights(self, m):
         if isinstance(m, nn.Linear):
             trunc_normal_(m.weight, std=.02)
@@ -262,28 +265,30 @@ class TransformerEncoderLayer(nn.Module):
 
         # compute attn
         start_time = time.time()
-
-        residual = x
-        x = self.maybe_layer_norm(self.attn_layer_norm, x, before=True)
-        x = self.attn(x)
-        x = F.dropout(x, p=self.sample_attn_dropout, training=self.training)
-        x = self.drop_path(x)
-        x = residual + x
-        x = self.maybe_layer_norm(self.attn_layer_norm, x, after=True)
+        print(x.shape)
+        with record_function("Multi Head Attention") :
+            residual = x
+            x = self.maybe_layer_norm(self.attn_layer_norm, x, before=True)
+            x = self.attn(x)
+            x = F.dropout(x, p=self.sample_attn_dropout, training=self.training)
+            x = self.drop_path(x)
+            x = residual + x
+            x = self.maybe_layer_norm(self.attn_layer_norm, x, after=True)
         print("attn :", time.time() - start_time)
         # compute the ffn
         start_time = time.time()
-        residual = x
-        x = self.maybe_layer_norm(self.ffn_layer_norm, x, before=True)
-        x = self.activation_fn(self.fc1(x))
-        x = F.dropout(x, p=self.sample_dropout, training=self.training)
-        x = self.fc2(x)
-        x = F.dropout(x, p=self.sample_dropout, training=self.training)
-        if self.scale:
-            x = x * (self.super_mlp_ratio / self.sample_mlp_ratio)
-        x = self.drop_path(x)
-        x = residual + x
-        x = self.maybe_layer_norm(self.ffn_layer_norm, x, after=True)
+        with record_function("FFN") :
+            residual = x
+            x = self.maybe_layer_norm(self.ffn_layer_norm, x, before=True)
+            x = self.activation_fn(self.fc1(x))
+            x = F.dropout(x, p=self.sample_dropout, training=self.training)
+            x = self.fc2(x)
+            x = F.dropout(x, p=self.sample_dropout, training=self.training)
+            if self.scale:
+                x = x * (self.super_mlp_ratio / self.sample_mlp_ratio)
+            x = self.drop_path(x)
+            x = residual + x
+            x = self.maybe_layer_norm(self.ffn_layer_norm, x, after=True)
         print("ffn :", time.time() - start_time)
         return x
 
