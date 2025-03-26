@@ -2,9 +2,6 @@ import os
 import sys
 import signal
 import stat
-import datetime
-import time
-from collections import defaultdict, deque
 
 import hostlist
 import torch

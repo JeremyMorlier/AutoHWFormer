@@ -1,10 +1,6 @@
 import os
-import cv2
 import json
-import torch
-import scipy
 import scipy.io as sio
-from skimage import io
 
 from torchvision import datasets, transforms
 from torchvision.datasets.folder import ImageFolder, default_loader

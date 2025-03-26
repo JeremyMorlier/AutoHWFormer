@@ -1,6 +1,5 @@
 import torch
 from torch import nn
-from torch.nn import Parameter
 import torch.nn.functional as F
 from .Linear_super import LinearSuper
 from .qkv_super import qkv_super

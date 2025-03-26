@@ -1,34 +1,16 @@
-import sys
-import time
-import datetime
-import yaml
-import json
-import math
-import random
-from typing import Iterable, Optional
-from pathlib import Path
-
-import numpy as np
 import torch
-import torch.backends.cudnn as cudnn
 
-from timm.data import Mixup
-from timm.models import create_model
 from timm.loss import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy
 from timm.scheduler import create_scheduler
 from timm.optim import create_optimizer
-from timm.utils import NativeScaler, accuracy, ModelEma
+from timm.utils import NativeScaler
 from timm.utils.model import unwrap_model
 
 import utils
 from args import get_profile_argparse
-from logger import Logger
 
 from libAutoFormer.config import cfg, update_config_from_file
-from libAutoFormer.samplers import RASampler
-from datasets.autoformer_datasets import build_dataset
 from model.supernet_transformer import Vision_TransformerSuper
-from references import MetricLogger, SmoothedValue
 
 from torch.profiler import profile, record_function, ProfilerActivity
 from train_supernet import sample_configs, select_config
@@ -75,7 +57,7 @@ def profile_evaluate(model, inputs, activities, torch_profile=True):
             activities=activities, profile_memory=True, record_shapes=True
         ) as prof:
             with record_function("model_inference"):
-                output = model(inputs)
+                _ = model(inputs)
 
         return prof
     else:
@@ -137,8 +119,8 @@ def main(args):
     linear_scaled_lr = args.lr * args.batch_size * utils.get_world_size() / 512.0
     args.lr = linear_scaled_lr
     optimizer = create_optimizer(args, model_without_ddp)
-    loss_scaler = NativeScaler()
-    lr_scheduler, _ = create_scheduler(args, optimizer)
+    _ = NativeScaler()
+    _, _ = create_scheduler(args, optimizer)
 
     # criterion = LabelSmoothingCrossEntropy()
 
