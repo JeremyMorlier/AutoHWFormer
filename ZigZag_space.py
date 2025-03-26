@@ -14,6 +14,10 @@ from train_supernet import sample_configs, select_config
 from model.transformer_onnx import SuperNet
 from libAutoFormer.config import cfg, update_config_from_file
 
+import logging
+logging.captureWarnings(True)
+logging.disable(logging.CRITICAL)
+
 def zigzag_performance(config) :
     time0 = time.time()
     # Extract config
@@ -82,12 +86,8 @@ class Config_Generator() :
             raise StopIteration
     def __iter__(self) :
         return self
-
-def _foot(my_number) :
-    square = my_number * my_number
-    id = multiprocessing.current_process().name
-    id = id.split("-")[-1]
-    return square, id
+    def __len__(self) :
+        return self.max_iter
 
 if __name__ == "__main__" :
     accelerator_path = "inputs/hardware/tpu_like.yaml"
@@ -109,10 +109,11 @@ if __name__ == "__main__" :
     # print(result["preprocess"], result["process"], result["energy"], result["latency"])
 
     num_tasks = 1000
-    num_workers = min(32, os.cpu_count() + 4)
+    num_workers = min(num_tasks, 32, os.cpu_count() + 4)
     chunksize = math.ceil(num_tasks / num_workers)
-    
-    config_generator = Config_Generator(1000, choices, mapping_config, hardware_config)
+    chunksize = 1
+
+    config_generator = Config_Generator(num_tasks, choices, mapping_config, hardware_config)
     config_iterator = iter(config_generator)
     r = process_map(zigzag_performance, config_iterator, max_workers=num_workers, chunksize=chunksize)
     
