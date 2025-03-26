@@ -43,12 +43,21 @@ def sample_configs(choices):
     config['layer_num'] = depth
     return config
 
+def select_config(model:torch.nn.Module, config, mode="super", retrain_config=None) :
+    if mode == 'super':
+        model_module = unwrap_model(model)
+        model_module.set_sample_config(config=config)
+    elif mode == 'retrain':
+        config = retrain_config
+        model_module = unwrap_model(model)
+        model_module.set_sample_config(config=config)
+    return model_module
 def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
                     data_loader: Iterable, optimizer: torch.optim.Optimizer,
                     device: torch.device, epoch: int, loss_scaler, max_norm: float = 0,
                     model_ema: Optional[ModelEma] = None, mixup_fn: Optional[Mixup] = None,
                     amp: bool = True, teacher_model: torch.nn.Module = None,
-                    teach_loss: torch.nn.Module = None, choices=None, mode='super', retrain_config=None):
+                    teach_loss: torch.nn.Module = None, config=None, choices=None, mode='super', retrain_config=None):
     model.train()
     criterion.train()
 
@@ -66,19 +75,26 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
         model_module.set_sample_config(config=config)
         print(model_module.get_sampled_params_numel(config))
 
+    if config is not None :
+        selected_config = config
     for samples, targets in metric_logger.log_every(data_loader, print_freq, header):
         samples = samples.to(device, non_blocking=True)
         targets = targets.to(device, non_blocking=True)
 
-        # sample random config
-        if mode == 'super':
-            config = sample_configs(choices=choices)
-            model_module = unwrap_model(model)
-            model_module.set_sample_config(config=config)
-        elif mode == 'retrain':
-            config = retrain_config
-            model_module = unwrap_model(model)
-            model_module.set_sample_config(config=config)
+        # Sample Config
+        if config is None :
+            selected_config = sample_configs(choices) 
+        select_config(model, selected_config, mode, retrain_config)
+
+        # # sample random config
+        # if mode == 'super':
+        #     config = sample_configs(choices=choices)
+        #     model_module = unwrap_model(model)
+        #     model_module.set_sample_config(config=config)
+        # elif mode == 'retrain':
+        #     config = retrain_config
+        #     model_module = unwrap_model(model)
+        #     model_module.set_sample_config(config=config)
         if mixup_fn is not None:
             samples, targets = mixup_fn(samples, targets)
         if amp:
@@ -132,7 +148,7 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
     return {k: meter.global_avg for k, meter in metric_logger.meters.items()}
 
 @torch.no_grad()
-def evaluate(data_loader, model, device, amp=True, choices=None, mode='super', retrain_config=None):
+def evaluate(data_loader, model, device, amp=True, config=None, choices=None, mode='super', retrain_config=None):
     criterion = torch.nn.CrossEntropyLoss()
 
     metric_logger = MetricLogger(delimiter="  ")
@@ -140,14 +156,22 @@ def evaluate(data_loader, model, device, amp=True, choices=None, mode='super', r
 
     # switch to evaluation mode
     model.eval()
-    if mode == 'super':
-        config = sample_configs(choices=choices)
-        model_module = unwrap_model(model)
-        model_module.set_sample_config(config=config)
-    else:
-        config = retrain_config
-        model_module = unwrap_model(model)
-        model_module.set_sample_config(config=config)
+
+    if config is not None :
+        selected_config = config
+
+    # Sample Config
+    if config is None :
+        selected_config = sample_configs(choices) 
+    model_module = select_config(model, selected_config, mode, retrain_config)
+    # if mode == 'super':
+    #     config = sample_configs(choices=choices)
+    #     model_module = unwrap_model(model)
+    #     model_module.set_sample_config(config=config)
+    # else:
+    #     config = retrain_config
+    #     model_module = unwrap_model(model)
+    #     model_module.set_sample_config(config=config)
 
 
     print("sampled model config: {}".format(config))
