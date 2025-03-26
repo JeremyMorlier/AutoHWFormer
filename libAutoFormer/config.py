@@ -15,10 +15,11 @@ def _edict2dict(dest_dict, src_edict):
     else:
         return
 
+
 def gen_config(config_file):
     cfg_dict = {}
     _edict2dict(cfg_dict, cfg)
-    with open(config_file, 'w') as f:
+    with open(config_file, "w") as f:
         yaml.dump(cfg_dict, f, default_flow_style=False)
 
 
@@ -35,4 +36,3 @@ def update_config_from_file(filename):
     with open(filename) as f:
         exp_config = edict(yaml.safe_load(f))
         _update_config(cfg, exp_config)
-

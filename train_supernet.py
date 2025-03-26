@@ -30,34 +30,50 @@ from datasets.autoformer_datasets import build_dataset
 from model.supernet_transformer import Vision_TransformerSuper
 from references import MetricLogger, SmoothedValue
 
-def sample_configs(choices):
 
+def sample_configs(choices):
     config = {}
-    dimensions = ['mlp_ratio', 'num_heads']
-    depth = random.choice(choices['depth'])
+    dimensions = ["mlp_ratio", "num_heads"]
+    depth = random.choice(choices["depth"])
     for dimension in dimensions:
         config[dimension] = [random.choice(choices[dimension]) for _ in range(depth)]
 
-    config['embed_dim'] = [random.choice(choices['embed_dim'])]*depth
+    config["embed_dim"] = [random.choice(choices["embed_dim"])] * depth
 
-    config['layer_num'] = depth
+    config["layer_num"] = depth
     return config
 
-def select_config(model:torch.nn.Module, config, mode="super", retrain_config=None) :
-    if mode == 'super':
+
+def select_config(model: torch.nn.Module, config, mode="super", retrain_config=None):
+    if mode == "super":
         model_module = unwrap_model(model)
         model_module.set_sample_config(config=config)
-    elif mode == 'retrain':
+    elif mode == "retrain":
         config = retrain_config
         model_module = unwrap_model(model)
         model_module.set_sample_config(config=config)
     return model_module
-def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
-                    data_loader: Iterable, optimizer: torch.optim.Optimizer,
-                    device: torch.device, epoch: int, loss_scaler, max_norm: float = 0,
-                    model_ema: Optional[ModelEma] = None, mixup_fn: Optional[Mixup] = None,
-                    amp: bool = True, teacher_model: torch.nn.Module = None,
-                    teach_loss: torch.nn.Module = None, config=None, choices=None, mode='super', retrain_config=None):
+
+
+def train_one_epoch(
+    model: torch.nn.Module,
+    criterion: torch.nn.Module,
+    data_loader: Iterable,
+    optimizer: torch.optim.Optimizer,
+    device: torch.device,
+    epoch: int,
+    loss_scaler,
+    max_norm: float = 0,
+    model_ema: Optional[ModelEma] = None,
+    mixup_fn: Optional[Mixup] = None,
+    amp: bool = True,
+    teacher_model: torch.nn.Module = None,
+    teach_loss: torch.nn.Module = None,
+    config=None,
+    choices=None,
+    mode="super",
+    retrain_config=None,
+):
     model.train()
     criterion.train()
 
@@ -65,25 +81,25 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
     random.seed(epoch)
 
     metric_logger = MetricLogger(delimiter="  ")
-    metric_logger.add_meter('lr', SmoothedValue(window_size=1, fmt='{value:.6f}'))
-    header = 'Epoch: [{}]'.format(epoch)
+    metric_logger.add_meter("lr", SmoothedValue(window_size=1, fmt="{value:.6f}"))
+    header = "Epoch: [{}]".format(epoch)
     print_freq = 10
-    if mode == 'retrain':
+    if mode == "retrain":
         config = retrain_config
         model_module = unwrap_model(model)
         print(config)
         model_module.set_sample_config(config=config)
         print(model_module.get_sampled_params_numel(config))
 
-    if config is not None :
+    if config is not None:
         selected_config = config
     for samples, targets in metric_logger.log_every(data_loader, print_freq, header):
         samples = samples.to(device, non_blocking=True)
         targets = targets.to(device, non_blocking=True)
 
         # Sample Config
-        if config is None :
-            selected_config = sample_configs(choices) 
+        if config is None:
+            selected_config = sample_configs(choices)
         select_config(model, selected_config, mode, retrain_config)
 
         # # sample random config
@@ -104,7 +120,9 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
                         teach_output = teacher_model(samples)
                     _, teacher_label = teach_output.topk(1, 1, True, True)
                     outputs = model(samples)
-                    loss = 1/2 * criterion(outputs, targets) + 1/2 * teach_loss(outputs, teacher_label.squeeze())
+                    loss = 1 / 2 * criterion(outputs, targets) + 1 / 2 * teach_loss(
+                        outputs, teacher_label.squeeze()
+                    )
                 else:
                     outputs = model(samples)
                     loss = criterion(outputs, targets)
@@ -114,7 +132,9 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
                 with torch.no_grad():
                     teach_output = teacher_model(samples)
                 _, teacher_label = teach_output.topk(1, 1, True, True)
-                loss = 1 / 2 * criterion(outputs, targets) + 1 / 2 * teach_loss(outputs, teacher_label.squeeze())
+                loss = 1 / 2 * criterion(outputs, targets) + 1 / 2 * teach_loss(
+                    outputs, teacher_label.squeeze()
+                )
             else:
                 loss = criterion(outputs, targets)
 
@@ -128,9 +148,16 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
 
         # this attribute is added by timm on one optimizer (adahessian)
         if amp:
-            is_second_order = hasattr(optimizer, 'is_second_order') and optimizer.is_second_order
-            loss_scaler(loss, optimizer, clip_grad=max_norm,
-                    parameters=model.parameters(), create_graph=is_second_order)
+            is_second_order = (
+                hasattr(optimizer, "is_second_order") and optimizer.is_second_order
+            )
+            loss_scaler(
+                loss,
+                optimizer,
+                clip_grad=max_norm,
+                parameters=model.parameters(),
+                create_graph=is_second_order,
+            )
         else:
             loss.backward()
             optimizer.step()
@@ -147,22 +174,32 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
     print("Averaged stats:", metric_logger)
     return {k: meter.global_avg for k, meter in metric_logger.meters.items()}
 
+
 @torch.no_grad()
-def evaluate(data_loader, model, device, amp=True, config=None, choices=None, mode='super', retrain_config=None):
+def evaluate(
+    data_loader,
+    model,
+    device,
+    amp=True,
+    config=None,
+    choices=None,
+    mode="super",
+    retrain_config=None,
+):
     criterion = torch.nn.CrossEntropyLoss()
 
     metric_logger = MetricLogger(delimiter="  ")
-    header = 'Test:'
+    header = "Test:"
 
     # switch to evaluation mode
     model.eval()
 
-    if config is not None :
+    if config is not None:
         selected_config = config
 
     # Sample Config
-    if config is None :
-        selected_config = sample_configs(choices) 
+    if config is None:
+        selected_config = sample_configs(choices)
     model_module = select_config(model, selected_config, mode, retrain_config)
     # if mode == 'super':
     #     config = sample_configs(choices=choices)
@@ -172,7 +209,6 @@ def evaluate(data_loader, model, device, amp=True, config=None, choices=None, mo
     #     config = retrain_config
     #     model_module = unwrap_model(model)
     #     model_module.set_sample_config(config=config)
-
 
     print("sampled model config: {}".format(config))
     parameters = model_module.get_sampled_params_numel(config)
@@ -194,17 +230,20 @@ def evaluate(data_loader, model, device, amp=True, config=None, choices=None, mo
 
         batch_size = images.shape[0]
         metric_logger.update(loss=loss.item())
-        metric_logger.meters['acc1'].update(acc1.item(), n=batch_size)
-        metric_logger.meters['acc5'].update(acc5.item(), n=batch_size)
+        metric_logger.meters["acc1"].update(acc1.item(), n=batch_size)
+        metric_logger.meters["acc5"].update(acc5.item(), n=batch_size)
     # gather the stats from all processes
     metric_logger.synchronize_between_processes()
-    print('* Acc@1 {top1.global_avg:.3f} Acc@5 {top5.global_avg:.3f} loss {losses.global_avg:.3f}'
-          .format(top1=metric_logger.acc1, top5=metric_logger.acc5, losses=metric_logger.loss))
+    print(
+        "* Acc@1 {top1.global_avg:.3f} Acc@5 {top5.global_avg:.3f} loss {losses.global_avg:.3f}".format(
+            top1=metric_logger.acc1, top5=metric_logger.acc5, losses=metric_logger.loss
+        )
+    )
 
     return {k: meter.global_avg for k, meter in metric_logger.meters.items()}
 
-def get_dataloaders(args) :
 
+def get_dataloaders(args):
     dataset_train, args.nb_classes = build_dataset(is_train=True, args=args)
     dataset_val, _ = build_dataset(is_train=False, args=args)
 
@@ -223,11 +262,13 @@ def get_dataloaders(args) :
         if args.dist_eval:
             if len(dataset_val) % num_tasks != 0:
                 print(
-                    'Warning: Enabling distributed evaluation with an eval dataset not divisible by process number. '
-                    'This will slightly alter validation results as extra duplicate entries are added to achieve '
-                    'equal num of samples per-process.')
+                    "Warning: Enabling distributed evaluation with an eval dataset not divisible by process number. "
+                    "This will slightly alter validation results as extra duplicate entries are added to achieve "
+                    "equal num of samples per-process."
+                )
             sampler_val = torch.utils.data.DistributedSampler(
-                dataset_val, num_replicas=num_tasks, rank=global_rank, shuffle=False)
+                dataset_val, num_replicas=num_tasks, rank=global_rank, shuffle=False
+            )
         else:
             sampler_val = torch.utils.data.SequentialSampler(dataset_val)
     else:
@@ -235,7 +276,8 @@ def get_dataloaders(args) :
         sampler_train = torch.utils.data.RandomSampler(dataset_train)
 
     data_loader_train = torch.utils.data.DataLoader(
-        dataset_train, sampler=sampler_train,
+        dataset_train,
+        sampler=sampler_train,
         batch_size=args.batch_size,
         num_workers=args.num_workers,
         pin_memory=args.pin_mem,
@@ -243,38 +285,43 @@ def get_dataloaders(args) :
     )
 
     data_loader_val = torch.utils.data.DataLoader(
-        dataset_val, batch_size=int(args.batch_size),
-        sampler=sampler_val, num_workers=args.num_workers,
-        pin_memory=args.pin_mem, drop_last=False
+        dataset_val,
+        batch_size=int(args.batch_size),
+        sampler=sampler_val,
+        num_workers=args.num_workers,
+        pin_memory=args.pin_mem,
+        drop_last=False,
     )
 
     return data_loader_train, data_loader_val
 
-def main(args) :
 
+def main(args):
     utils.init_distributed_mode(args)
     utils.init_signal_handler()
 
     device = torch.device(args.device)
     update_config_from_file(args.cfg)
-    if utils.is_main_process() :
+    if utils.is_main_process():
         # similar API to wandb except mode and log_dir
-        logger = Logger(project_name="whatever",
-                run_name=args.name,
-                tags=["patate"],
-                resume=True,
-                args=args,
-                mode=args.logger,
-                log_dir=args.output_dir)
-        
+        logger = Logger(
+            project_name="whatever",
+            run_name=args.name,
+            tags=["patate"],
+            resume=True,
+            args=args,
+            mode=args.logger,
+            log_dir=args.output_dir,
+        )
+
     output_dir = Path(args.output_dir)
     if not output_dir.exists():
         output_dir.mkdir(parents=True)
     # save config for later experiments
     args_text = yaml.safe_dump(args.__dict__, default_flow_style=False)
-    with open(output_dir / "config.yaml", 'w') as f:
+    with open(output_dir / "config.yaml", "w") as f:
         f.write(args_text)
-    
+
     # fix the seed for reproducibility
     seed = args.seed + utils.get_rank()
     torch.manual_seed(seed)
@@ -282,30 +329,46 @@ def main(args) :
     # random.seed(seed)
     cudnn.benchmark = True
 
-    choices = {'num_heads': cfg.SEARCH_SPACE.NUM_HEADS, 'mlp_ratio': cfg.SEARCH_SPACE.MLP_RATIO,
-               'embed_dim': cfg.SEARCH_SPACE.EMBED_DIM , 'depth': cfg.SEARCH_SPACE.DEPTH}
+    choices = {
+        "num_heads": cfg.SEARCH_SPACE.NUM_HEADS,
+        "mlp_ratio": cfg.SEARCH_SPACE.MLP_RATIO,
+        "embed_dim": cfg.SEARCH_SPACE.EMBED_DIM,
+        "depth": cfg.SEARCH_SPACE.DEPTH,
+    }
 
     data_loader_train, data_loader_val = get_dataloaders(args)
 
     mixup_fn = None
-    mixup_active = args.mixup > 0 or args.cutmix > 0. or args.cutmix_minmax is not None
+    mixup_active = args.mixup > 0 or args.cutmix > 0.0 or args.cutmix_minmax is not None
     if mixup_active:
         mixup_fn = Mixup(
-            mixup_alpha=args.mixup, cutmix_alpha=args.cutmix, cutmix_minmax=args.cutmix_minmax,
-            prob=args.mixup_prob, switch_prob=args.mixup_switch_prob, mode=args.mixup_mode,
-            label_smoothing=args.smoothing, num_classes=args.nb_classes)
-        
-    model = Vision_TransformerSuper(img_size=args.input_size,
-                                    patch_size=args.patch_size,
-                                    embed_dim=cfg.SUPERNET.EMBED_DIM, depth=cfg.SUPERNET.DEPTH,
-                                    num_heads=cfg.SUPERNET.NUM_HEADS,mlp_ratio=cfg.SUPERNET.MLP_RATIO,
-                                    qkv_bias=True, drop_rate=args.drop,
-                                    drop_path_rate=args.drop_path,
-                                    gp=args.gp,
-                                    num_classes=args.nb_classes,
-                                    max_relative_position=args.max_relative_position,
-                                    relative_position=args.relative_position,
-                                    change_qkv=args.change_qkv, abs_pos=not args.no_abs_pos)
+            mixup_alpha=args.mixup,
+            cutmix_alpha=args.cutmix,
+            cutmix_minmax=args.cutmix_minmax,
+            prob=args.mixup_prob,
+            switch_prob=args.mixup_switch_prob,
+            mode=args.mixup_mode,
+            label_smoothing=args.smoothing,
+            num_classes=args.nb_classes,
+        )
+
+    model = Vision_TransformerSuper(
+        img_size=args.input_size,
+        patch_size=args.patch_size,
+        embed_dim=cfg.SUPERNET.EMBED_DIM,
+        depth=cfg.SUPERNET.DEPTH,
+        num_heads=cfg.SUPERNET.NUM_HEADS,
+        mlp_ratio=cfg.SUPERNET.MLP_RATIO,
+        qkv_bias=True,
+        drop_rate=args.drop,
+        drop_path_rate=args.drop_path,
+        gp=args.gp,
+        num_classes=args.nb_classes,
+        max_relative_position=args.max_relative_position,
+        relative_position=args.relative_position,
+        change_qkv=args.change_qkv,
+        abs_pos=not args.no_abs_pos,
+    )
 
     model.to(device)
     if args.distributed and args.sync_bn:
@@ -314,14 +377,30 @@ def main(args) :
     # Parallelize the model using Distributed Data Parallel (DDP)
     model_without_ddp = model
     if args.distributed:
-        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu], find_unused_parameters=True)
+        model = torch.nn.parallel.DistributedDataParallel(
+            model, device_ids=[args.gpu], find_unused_parameters=True
+        )
         model_without_ddp = model.module
-    
-    print("cuda_mem_allocated", torch.cuda.memory_allocated(), "cuda_max_mem_allocated", torch.cuda.max_memory_allocated(), "cuda_mem_reserved", torch.cuda.memory_reserved(), "cuda_max_mem_reserved", torch.cuda.max_memory_reserved())
+
+    print(
+        "cuda_mem_allocated",
+        torch.cuda.memory_allocated(),
+        "cuda_max_mem_allocated",
+        torch.cuda.max_memory_allocated(),
+        "cuda_mem_reserved",
+        torch.cuda.memory_reserved(),
+        "cuda_max_mem_reserved",
+        torch.cuda.max_memory_reserved(),
+    )
     n_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
-    print('number of params:', n_parameters)
-    if utils.is_main_process() :
-        logger.log({"nparams": n_parameters, "cuda_mem_allocated": torch.cuda.memory_allocated()})
+    print("number of params:", n_parameters)
+    if utils.is_main_process():
+        logger.log(
+            {
+                "nparams": n_parameters,
+                "cuda_mem_allocated": torch.cuda.memory_allocated(),
+            }
+        )
 
     # TODO: as in https://github.com/microsoft/Cream/blob/main/AutoFormer/supernet_train.py add teacher model for distillation
     teacher_model = None
@@ -337,7 +416,7 @@ def main(args) :
 
     # criterion = LabelSmoothingCrossEntropy()
 
-    if args.mixup > 0.:
+    if args.mixup > 0.0:
         # smoothing is handled with mixup label transform
         criterion = SoftTargetCrossEntropy()
     elif args.smoothing:
@@ -346,27 +425,43 @@ def main(args) :
         criterion = torch.nn.CrossEntropyLoss()
 
     if args.resume:
-        if args.resume.startswith('https'):
+        if args.resume.startswith("https"):
             checkpoint = torch.hub.load_state_dict_from_url(
-                args.resume, map_location='cpu', check_hash=True)
+                args.resume, map_location="cpu", check_hash=True
+            )
         else:
-            checkpoint = torch.load(args.resume, map_location='cpu')
-        model_without_ddp.load_state_dict(checkpoint['model'])
-        if not args.eval and 'optimizer' in checkpoint and 'lr_scheduler' in checkpoint and 'epoch' in checkpoint:
-            optimizer.load_state_dict(checkpoint['optimizer'])
-            lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
-            args.start_epoch = checkpoint['epoch'] + 1
-            if 'scaler' in checkpoint:
-                loss_scaler.load_state_dict(checkpoint['scaler'])
+            checkpoint = torch.load(args.resume, map_location="cpu")
+        model_without_ddp.load_state_dict(checkpoint["model"])
+        if (
+            not args.eval
+            and "optimizer" in checkpoint
+            and "lr_scheduler" in checkpoint
+            and "epoch" in checkpoint
+        ):
+            optimizer.load_state_dict(checkpoint["optimizer"])
+            lr_scheduler.load_state_dict(checkpoint["lr_scheduler"])
+            args.start_epoch = checkpoint["epoch"] + 1
+            if "scaler" in checkpoint:
+                loss_scaler.load_state_dict(checkpoint["scaler"])
             if args.model_ema:
-                utils._load_checkpoint_for_ema(model_ema, checkpoint['model_ema'])
+                utils._load_checkpoint_for_ema(model_ema, checkpoint["model_ema"])
 
     retrain_config = None
-    if args.mode == 'retrain' and "RETRAIN" in cfg:
-        retrain_config = {'layer_num': cfg.RETRAIN.DEPTH, 'embed_dim': [cfg.RETRAIN.EMBED_DIM]*cfg.RETRAIN.DEPTH,
-                          'num_heads': cfg.RETRAIN.NUM_HEADS,'mlp_ratio': cfg.RETRAIN.MLP_RATIO}
+    if args.mode == "retrain" and "RETRAIN" in cfg:
+        retrain_config = {
+            "layer_num": cfg.RETRAIN.DEPTH,
+            "embed_dim": [cfg.RETRAIN.EMBED_DIM] * cfg.RETRAIN.DEPTH,
+            "num_heads": cfg.RETRAIN.NUM_HEADS,
+            "mlp_ratio": cfg.RETRAIN.MLP_RATIO,
+        }
     if args.eval:
-        test_stats = evaluate(data_loader_val, model, device,  mode = args.mode, retrain_config=retrain_config)
+        test_stats = evaluate(
+            data_loader_val,
+            model,
+            device,
+            mode=args.mode,
+            retrain_config=retrain_config,
+        )
         print(f"Accuracy of the network on the test images: {test_stats['acc1']:.1f}%")
         return
 
@@ -379,46 +474,86 @@ def main(args) :
             data_loader_train.sampler.set_epoch(epoch)
 
         train_stats = train_one_epoch(
-            model, criterion, data_loader_train,
-            optimizer, device, epoch, loss_scaler,
-            args.clip_grad, model_ema, mixup_fn,
-            amp=args.amp, teacher_model=teacher_model,
+            model,
+            criterion,
+            data_loader_train,
+            optimizer,
+            device,
+            epoch,
+            loss_scaler,
+            args.clip_grad,
+            model_ema,
+            mixup_fn,
+            amp=args.amp,
+            teacher_model=teacher_model,
             teach_loss=teacher_loss,
-            choices=choices, mode = args.mode, retrain_config=retrain_config,
+            choices=choices,
+            mode=args.mode,
+            retrain_config=retrain_config,
         )
-        if utils.is_main_process() :
+        if utils.is_main_process():
             logger.log(train_stats)
             logger.log({"cuda_mem_allocated": torch.cuda.memory_allocated()})
-        print("cuda_mem_allocated", torch.cuda.memory_allocated(), "cuda_max_mem_allocated", torch.cuda.max_memory_allocated(), "cuda_mem_reserved", torch.cuda.memory_reserved(), "cuda_max_mem_reserved", torch.cuda.max_memory_reserved())
+        print(
+            "cuda_mem_allocated",
+            torch.cuda.memory_allocated(),
+            "cuda_max_mem_allocated",
+            torch.cuda.max_memory_allocated(),
+            "cuda_mem_reserved",
+            torch.cuda.memory_reserved(),
+            "cuda_max_mem_reserved",
+            torch.cuda.max_memory_reserved(),
+        )
 
         lr_scheduler.step(epoch)
         if args.output_dir:
-            checkpoint_paths = [output_dir / 'checkpoint.pth']
+            checkpoint_paths = [output_dir / "checkpoint.pth"]
             for checkpoint_path in checkpoint_paths:
-                utils.save_on_master({
-                    'model': model_without_ddp.state_dict(),
-                    'optimizer': optimizer.state_dict(),
-                    'lr_scheduler': lr_scheduler.state_dict(),
-                    'epoch': epoch,
-                    # 'model_ema': get_state_dict(model_ema),
-                    'scaler': loss_scaler.state_dict(),
-                    'args': args,
-                }, checkpoint_path)
+                utils.save_on_master(
+                    {
+                        "model": model_without_ddp.state_dict(),
+                        "optimizer": optimizer.state_dict(),
+                        "lr_scheduler": lr_scheduler.state_dict(),
+                        "epoch": epoch,
+                        # 'model_ema': get_state_dict(model_ema),
+                        "scaler": loss_scaler.state_dict(),
+                        "args": args,
+                    },
+                    checkpoint_path,
+                )
 
-        test_stats = evaluate(data_loader_val, model, device, amp=args.amp, choices=choices, mode = args.mode, retrain_config=retrain_config)
+        test_stats = evaluate(
+            data_loader_val,
+            model,
+            device,
+            amp=args.amp,
+            choices=choices,
+            mode=args.mode,
+            retrain_config=retrain_config,
+        )
         print(f"Accuracy of the network on the test images: {test_stats['acc1']:.1f}%")
         max_accuracy = max(max_accuracy, test_stats["acc1"])
-        print(f'Max accuracy: {max_accuracy:.2f}%')
-        if utils.is_main_process() :
+        print(f"Max accuracy: {max_accuracy:.2f}%")
+        if utils.is_main_process():
             logger.log(test_stats)
-            logger.log({"max_accuracy": max_accuracy, "cuda_mem_allocated": torch.cuda.memory_allocated(), "cuda_max_mem_allocated": torch.cuda.max_memory_allocated(), "cuda_mem_reserved": torch.cuda.memory_reserved(), "cuda_max_mem_reserved": torch.cuda.max_memory_reserved()})
+            logger.log(
+                {
+                    "max_accuracy": max_accuracy,
+                    "cuda_mem_allocated": torch.cuda.memory_allocated(),
+                    "cuda_max_mem_allocated": torch.cuda.max_memory_allocated(),
+                    "cuda_mem_reserved": torch.cuda.memory_reserved(),
+                    "cuda_max_mem_reserved": torch.cuda.max_memory_reserved(),
+                }
+            )
 
-        log_stats = {**{f'train_{k}': v for k, v in train_stats.items()},
-                     **{f'test_{k}': v for k, v in test_stats.items()},
-                     'epoch': epoch,
-                     'n_parameters': n_parameters}
-        
-        if utils.is_main_process() :
+        log_stats = {
+            **{f"train_{k}": v for k, v in train_stats.items()},
+            **{f"test_{k}": v for k, v in test_stats.items()},
+            "epoch": epoch,
+            "n_parameters": n_parameters,
+        }
+
+        if utils.is_main_process():
             logger.log(log_stats)
 
         if args.output_dir and utils.is_main_process():
@@ -427,10 +562,10 @@ def main(args) :
 
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
-    print('Training time {}'.format(total_time_str))
+    print("Training time {}".format(total_time_str))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = get_autoformer_argsparse()
     args = parser.parse_args()
     if args.output_dir:

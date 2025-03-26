@@ -46,7 +46,9 @@ class ImageNet(ImageFolder):
         targets (list): The class_index value for each image in the dataset
     """
 
-    def __init__(self, root: Union[str, Path], split: str = "train", **kwargs: Any) -> None:
+    def __init__(
+        self, root: Union[str, Path], split: str = "train", **kwargs: Any
+    ) -> None:
         root = self.root = os.path.expanduser(root)
         self.split = verify_str_arg(split, "split", ("train", "val"))
 
@@ -59,7 +61,9 @@ class ImageNet(ImageFolder):
         self.wnids = self.classes
         self.wnid_to_idx = self.class_to_idx
         self.classes = [wnid_to_classes[wnid] for wnid in self.wnids]
-        self.class_to_idx = {cls: idx for idx, clss in enumerate(self.classes) for cls in clss}
+        self.class_to_idx = {
+            cls: idx for idx, clss in enumerate(self.classes) for cls in clss
+        }
 
     def parse_archives(self) -> None:
         if not check_integrity(os.path.join(self.root, META_FILE)):
@@ -79,7 +83,9 @@ class ImageNet(ImageFolder):
         return "Split: {split}".format(**self.__dict__)
 
 
-def load_meta_file(root: Union[str, Path], file: Optional[str] = None) -> Tuple[Dict[str, str], List[str]]:
+def load_meta_file(
+    root: Union[str, Path], file: Optional[str] = None
+) -> Tuple[Dict[str, str], List[str]]:
     if file is None:
         file = META_FILE
     file = os.path.join(root, file)
@@ -114,11 +120,17 @@ def parse_devkit_archive(root: Union[str, Path], file: Optional[str] = None) -> 
     """
     import scipy.io as sio
 
-    def parse_meta_mat(devkit_root: str) -> Tuple[Dict[int, str], Dict[str, Tuple[str, ...]]]:
+    def parse_meta_mat(
+        devkit_root: str,
+    ) -> Tuple[Dict[int, str], Dict[str, Tuple[str, ...]]]:
         metafile = os.path.join(devkit_root, "data", "meta.mat")
         meta = sio.loadmat(metafile, squeeze_me=True)["synsets"]
         nums_children = list(zip(*meta))[4]
-        meta = [meta[idx] for idx, num_children in enumerate(nums_children) if num_children == 0]
+        meta = [
+            meta[idx]
+            for idx, num_children in enumerate(nums_children)
+            if num_children == 0
+        ]
         idcs, wnids, classes = list(zip(*meta))[:3]
         classes = [tuple(clss.split(", ")) for clss in classes]
         idx_to_wnid = {idx: wnid for idx, wnid in zip(idcs, wnids)}
@@ -126,7 +138,9 @@ def parse_devkit_archive(root: Union[str, Path], file: Optional[str] = None) -> 
         return idx_to_wnid, wnid_to_classes
 
     def parse_val_groundtruth_txt(devkit_root: str) -> List[int]:
-        file = os.path.join(devkit_root, "data", "ILSVRC2012_validation_ground_truth.txt")
+        file = os.path.join(
+            devkit_root, "data", "ILSVRC2012_validation_ground_truth.txt"
+        )
         with open(file) as txtfh:
             val_idcs = txtfh.readlines()
         return [int(val_idx) for val_idx in val_idcs]
@@ -157,7 +171,9 @@ def parse_devkit_archive(root: Union[str, Path], file: Optional[str] = None) -> 
         torch.save((wnid_to_classes, val_wnids), os.path.join(root, META_FILE))
 
 
-def parse_train_archive(root: Union[str, Path], file: Optional[str] = None, folder: str = "train") -> None:
+def parse_train_archive(
+    root: Union[str, Path], file: Optional[str] = None, folder: str = "train"
+) -> None:
     """Parse the train images archive of the ImageNet2012 classification dataset and
     prepare it for usage with the ImageNet dataset.
 
@@ -184,7 +200,10 @@ def parse_train_archive(root: Union[str, Path], file: Optional[str] = None, fold
 
 
 def parse_val_archive(
-    root: Union[str, Path], file: Optional[str] = None, wnids: Optional[List[str]] = None, folder: str = "val"
+    root: Union[str, Path],
+    file: Optional[str] = None,
+    wnids: Optional[List[str]] = None,
+    folder: str = "val",
 ) -> None:
     """Parse the validation images archive of the ImageNet2012 classification dataset
     and prepare it for usage with the ImageNet dataset.

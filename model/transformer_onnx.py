@@ -9,6 +9,7 @@ import torch.nn as nn
 
 from torchvision.ops.misc import Conv2dNormActivation, MLP
 
+
 class ConvStemConfig(NamedTuple):
     out_channels: int
     kernel_size: int
@@ -23,7 +24,13 @@ class MLPBlock(MLP):
     _version = 2
 
     def __init__(self, in_dim: int, mlp_dim: int, dropout: float):
-        super().__init__(in_dim, [mlp_dim, in_dim], activation_layer=nn.GELU, inplace=None, dropout=dropout)
+        super().__init__(
+            in_dim,
+            [mlp_dim, in_dim],
+            activation_layer=nn.GELU,
+            inplace=None,
+            dropout=dropout,
+        )
 
         for m in self.modules():
             if isinstance(m, nn.Linear):
@@ -47,8 +54,8 @@ class MLPBlock(MLP):
             # Replacing legacy MLPBlock with MLP. See https://github.com/pytorch/vision/pull/6053
             for i in range(2):
                 for type in ["weight", "bias"]:
-                    old_key = f"{prefix}linear_{i+1}.{type}"
-                    new_key = f"{prefix}{3*i}.{type}"
+                    old_key = f"{prefix}linear_{i + 1}.{type}"
+                    new_key = f"{prefix}{3 * i}.{type}"
                     if old_key in state_dict:
                         state_dict[new_key] = state_dict.pop(old_key)
 
@@ -63,13 +70,14 @@ class MLPBlock(MLP):
         )
 
 
-
-class Resize(nn.Module) :
+class Resize(nn.Module):
     def __init__(self, dim):
         super().__init__()
         self.dim = dim
-    def forward(self, x) :
-        return x[:, :, 0:self.dim]
+
+    def forward(self, x):
+        return x[:, :, 0 : self.dim]
+
 
 class EncoderBlock(nn.Module):
     """Transformer encoder block."""
@@ -88,14 +96,20 @@ class EncoderBlock(nn.Module):
 
         # Attention block
         self.ln_1 = norm_layer(hidden_dim)
-        self.self_attention = nn.MultiheadAttention(hidden_dim, num_heads, dropout=attention_dropout, batch_first=True)
+        self.self_attention = nn.MultiheadAttention(
+            hidden_dim, num_heads, dropout=attention_dropout, batch_first=True
+        )
         self.dropout = nn.Dropout(dropout)
 
         # MLP block
         self.ln_2 = norm_layer(hidden_dim)
-        self.mlp = MLPBlock(hidden_dim, int(mlp_ratio*hidden_dim), dropout)
+        self.mlp = MLPBlock(hidden_dim, int(mlp_ratio * hidden_dim), dropout)
+
     def forward(self, input: torch.Tensor):
-        torch._assert(input.dim() == 3, f"Expected (batch_size, seq_length, hidden_dim) got {input.shape}")
+        torch._assert(
+            input.dim() == 3,
+            f"Expected (batch_size, seq_length, hidden_dim) got {input.shape}",
+        )
         x = self.ln_1(input)
         x, _ = self.self_attention(x, x, x, need_weights=False)
         x = self.dropout(x)
@@ -122,7 +136,9 @@ class SuperNetEncoder(nn.Module):
         super().__init__()
         # Note that batch_size is on the first dim because
         # we have batch_first=True in nn.MultiAttention() by default
-        self.pos_embedding = nn.Parameter(torch.empty(1, seq_length, hidden_dims[0]).normal_(std=0.02))  # from BERT
+        self.pos_embedding = nn.Parameter(
+            torch.empty(1, seq_length, hidden_dims[0]).normal_(std=0.02)
+        )  # from BERT
         self.dropout = nn.Dropout(dropout)
         layers: OrderedDict[str, nn.Module] = OrderedDict()
         for i in range(num_layers):
@@ -136,12 +152,17 @@ class SuperNetEncoder(nn.Module):
             )
         self.layers = nn.Sequential(layers)
         self.ln = norm_layer(hidden_dims[-1])
+
     def forward(self, input: torch.Tensor):
-        torch._assert(input.dim() == 3, f"Expected (batch_size, seq_length, hidden_dim) got {input.shape}")
+        torch._assert(
+            input.dim() == 3,
+            f"Expected (batch_size, seq_length, hidden_dim) got {input.shape}",
+        )
         input = input + self.pos_embedding
         input = self.ln(self.layers(self.dropout(input)))
-        return input 
-    
+        return input
+
+
 class SuperNet(nn.Module):
     """Vision Transformer as per https://arxiv.org/abs/2010.11929."""
 
@@ -161,7 +182,9 @@ class SuperNet(nn.Module):
         conv_stem_configs: Optional[List[ConvStemConfig]] = None,
     ):
         super().__init__()
-        torch._assert(image_size % patch_size == 0, "Input shape indivisible by patch size!")
+        torch._assert(
+            image_size % patch_size == 0, "Input shape indivisible by patch size!"
+        )
         self.image_size = image_size
         self.patch_size = patch_size
         self.hidden_dims = hidden_dims
@@ -190,12 +213,20 @@ class SuperNet(nn.Module):
                 )
                 prev_channels = conv_stem_layer_config.out_channels
             seq_proj.add_module(
-                "conv_last", nn.Conv2d(in_channels=prev_channels, out_channels=hidden_dims[0], kernel_size=1)
+                "conv_last",
+                nn.Conv2d(
+                    in_channels=prev_channels,
+                    out_channels=hidden_dims[0],
+                    kernel_size=1,
+                ),
             )
             self.conv_proj: nn.Module = seq_proj
         else:
             self.conv_proj = nn.Conv2d(
-                in_channels=3, out_channels=hidden_dims[0], kernel_size=patch_size, stride=patch_size
+                in_channels=3,
+                out_channels=hidden_dims[0],
+                kernel_size=patch_size,
+                stride=patch_size,
             )
 
         seq_length = (image_size // patch_size) ** 2
@@ -228,21 +259,33 @@ class SuperNet(nn.Module):
 
         if isinstance(self.conv_proj, nn.Conv2d):
             # Init the patchify stem
-            fan_in = self.conv_proj.in_channels * self.conv_proj.kernel_size[0] * self.conv_proj.kernel_size[1]
+            fan_in = (
+                self.conv_proj.in_channels
+                * self.conv_proj.kernel_size[0]
+                * self.conv_proj.kernel_size[1]
+            )
             nn.init.trunc_normal_(self.conv_proj.weight, std=math.sqrt(1 / fan_in))
             if self.conv_proj.bias is not None:
                 nn.init.zeros_(self.conv_proj.bias)
-        elif self.conv_proj.conv_last is not None and isinstance(self.conv_proj.conv_last, nn.Conv2d):
+        elif self.conv_proj.conv_last is not None and isinstance(
+            self.conv_proj.conv_last, nn.Conv2d
+        ):
             # Init the last 1x1 conv of the conv stem
             nn.init.normal_(
-                self.conv_proj.conv_last.weight, mean=0.0, std=math.sqrt(2.0 / self.conv_proj.conv_last.out_channels)
+                self.conv_proj.conv_last.weight,
+                mean=0.0,
+                std=math.sqrt(2.0 / self.conv_proj.conv_last.out_channels),
             )
             if self.conv_proj.conv_last.bias is not None:
                 nn.init.zeros_(self.conv_proj.conv_last.bias)
 
-        if hasattr(self.heads, "pre_logits") and isinstance(self.heads.pre_logits, nn.Linear):
+        if hasattr(self.heads, "pre_logits") and isinstance(
+            self.heads.pre_logits, nn.Linear
+        ):
             fan_in = self.heads.pre_logits.in_features
-            nn.init.trunc_normal_(self.heads.pre_logits.weight, std=math.sqrt(1 / fan_in))
+            nn.init.trunc_normal_(
+                self.heads.pre_logits.weight, std=math.sqrt(1 / fan_in)
+            )
             nn.init.zeros_(self.heads.pre_logits.bias)
 
         if isinstance(self.heads.head, nn.Linear):
@@ -252,8 +295,14 @@ class SuperNet(nn.Module):
     def _process_input(self, x: torch.Tensor) -> torch.Tensor:
         n, c, h, w = x.shape
         p = self.patch_size
-        torch._assert(h == self.image_size, f"Wrong image height! Expected {self.image_size} but got {h}!")
-        torch._assert(w == self.image_size, f"Wrong image width! Expected {self.image_size} but got {w}!")
+        torch._assert(
+            h == self.image_size,
+            f"Wrong image height! Expected {self.image_size} but got {h}!",
+        )
+        torch._assert(
+            w == self.image_size,
+            f"Wrong image width! Expected {self.image_size} but got {w}!",
+        )
         n_h = h // p
         n_w = w // p
 
@@ -270,7 +319,7 @@ class SuperNet(nn.Module):
 
         return x
 
-    def backbone_forward(self, x: torch.Tensor) :
+    def backbone_forward(self, x: torch.Tensor):
         # Reshape and permute the input tensor
         x = self._process_input(x)
         n = x.shape[0]
@@ -280,18 +329,21 @@ class SuperNet(nn.Module):
         x = torch.cat([batch_class_token, x], dim=1)
         x = self.encoder(x)
         return x
-     
-    
+
     def forward(self, x: torch.Tensor, return_patch=False, reshape=False):
         feats = self.backbone_forward(x)
         # Classifier "token" as used by standard language architectures
         class_token = feats[:, 0]
         outputs = feats[:, 1:]
 
-        if return_patch :
-            if reshape :
+        if return_patch:
+            if reshape:
                 B, _, w, h = x.shape
-                outputs = outputs.reshape(B, w // self.patch_size, h // self.patch_size, -1).permute(0, 3, 1, 2).contiguous()
+                outputs = (
+                    outputs.reshape(B, w // self.patch_size, h // self.patch_size, -1)
+                    .permute(0, 3, 1, 2)
+                    .contiguous()
+                )
             return outputs
 
         class_token = self.heads(class_token)

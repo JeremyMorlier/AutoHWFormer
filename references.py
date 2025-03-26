@@ -9,6 +9,7 @@ import torch
 
 from utils import reduce_across_processes
 
+
 def set_weight_decay(
     model: torch.nn.Module,
     weight_decay: float,
@@ -47,7 +48,9 @@ def set_weight_decay(
                 continue
             is_custom_key = False
             for key in custom_keys:
-                target_name = f"{prefix}.{name}" if prefix != "" and "." in key else name
+                target_name = (
+                    f"{prefix}.{name}" if prefix != "" and "." in key else name
+                )
                 if key == target_name:
                     params[key].append(p)
                     is_custom_key = True
@@ -67,8 +70,11 @@ def set_weight_decay(
     param_groups = []
     for key in params:
         if len(params[key]) > 0:
-            param_groups.append({"params": params[key], "weight_decay": params_weight_decay[key]})
+            param_groups.append(
+                {"params": params[key], "weight_decay": params_weight_decay[key]}
+            )
     return param_groups
+
 
 class SmoothedValue:
     """Track a series of values and provide access to smoothed values over a
@@ -121,7 +127,11 @@ class SmoothedValue:
 
     def __str__(self):
         return self.fmt.format(
-            median=self.median, avg=self.avg, global_avg=self.global_avg, max=self.max, value=self.value
+            median=self.median,
+            avg=self.avg,
+            global_avg=self.global_avg,
+            max=self.max,
+            value=self.value,
         )
 
 
@@ -142,7 +152,9 @@ class MetricLogger:
             return self.meters[attr]
         if attr in self.__dict__:
             return self.__dict__[attr]
-        raise AttributeError(f"'{type(self).__name__}' object has no attribute '{attr}'")
+        raise AttributeError(
+            f"'{type(self).__name__}' object has no attribute '{attr}'"
+        )
 
     def __str__(self):
         loss_str = []
@@ -182,7 +194,14 @@ class MetricLogger:
             )
         else:
             log_msg = self.delimiter.join(
-                [header, "[{0" + space_fmt + "}/{1}]", "eta: {eta}", "{meters}", "time: {time}", "data: {data}"]
+                [
+                    header,
+                    "[{0" + space_fmt + "}/{1}]",
+                    "eta: {eta}",
+                    "{meters}",
+                    "time: {time}",
+                    "data: {data}",
+                ]
             )
         MB = 1024.0 * 1024.0
         for obj in iterable:
@@ -204,13 +223,18 @@ class MetricLogger:
                             data=str(data_time),
                             memory=torch.cuda.max_memory_allocated() / MB,
                             cpu_mem=mem.available,
-                            cpu_per_mem=mem.percent
+                            cpu_per_mem=mem.percent,
                         )
                     )
                 else:
                     print(
                         log_msg.format(
-                            i, len(iterable), eta=eta_string, meters=str(self), time=str(iter_time), data=str(data_time)
+                            i,
+                            len(iterable),
+                            eta=eta_string,
+                            meters=str(self),
+                            time=str(iter_time),
+                            data=str(data_time),
                         )
                     )
             i += 1
