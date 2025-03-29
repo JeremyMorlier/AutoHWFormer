@@ -1,5 +1,6 @@
 import os
 import math
+import json
 from tqdm.contrib.concurrent import process_map
 import multiprocessing
 import time
@@ -38,6 +39,7 @@ def zigzag_performance(config):
     inferred_path = os.path.join(process_path, "inferred_" + onnx_name)
     accelerator_path = os.path.join(process_path, "accelerator.yaml")
     mapping_path = os.path.join(process_path, "mapping.yaml")
+    result_path = os.path.join(process_path, "result.txt")
     Path(process_path).mkdir(parents=True, exist_ok=True)
 
     # Saves Mapping and Accelerator Configs for zigzag
@@ -64,7 +66,7 @@ def zigzag_performance(config):
     onnx.save(inferred_model, inferred_path)
     time1 = time.time()
     result = {}
-    opts = ["energy", "latency", "EDP"]
+    opts = ["EDP"]
     for opt in opts:
         result[opt] = {}
         energy, latency, cme = api.get_hardware_performance_zigzag(
@@ -80,7 +82,12 @@ def zigzag_performance(config):
 
     result["preprocess"] = time1 - time0
     result["process"] = time2 - time1
-    return config, result
+
+    with open(result_path, "w+") as file :
+        json.dump(result, file)
+        json.dump(config, file)
+        file.write("\n")
+    return True
 
 
 class Config_Generator:
@@ -134,9 +141,11 @@ if __name__ == "__main__":
     # new_config, result = zigzag_performance(config)
     # print(result["preprocess"], result["process"], result["energy"], result["latency"])
 
-    num_tasks = 1000
+    num_tasks = 10000
     num_workers = min(num_tasks, 32, os.cpu_count() + 4)
     chunksize = math.ceil(num_tasks / num_workers)
+
+    num_workers = 8
     chunksize = 1
 
     config_generator = Config_Generator(
@@ -150,6 +159,9 @@ if __name__ == "__main__":
         chunksize=chunksize,
     )
 
+    # r = []
+    # for config in tqdm(config_iterator) :
+    #     r.append(zigzag_performance(config))
     print(r)
     # r2 = [int(element[-1]) for element in r]
     # print(list(set(r2)))
