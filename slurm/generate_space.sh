@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --partition=GlobalBrain3080
+#SBATCH --partition=Brain3080
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
 #SBATCH --time=168:00:00
