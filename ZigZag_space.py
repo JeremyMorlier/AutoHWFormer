@@ -83,7 +83,7 @@ def zigzag_performance(config):
     result["preprocess"] = time1 - time0
     result["process"] = time2 - time1
 
-    with open(result_path, "w+") as file :
+    with open(result_path, "a") as file :
         json.dump(result, file)
         json.dump(config, file)
         file.write("\n")
