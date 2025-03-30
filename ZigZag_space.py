@@ -34,7 +34,7 @@ def zigzag_performance(config):
     id = id.split("-")[-1]
 
     onnx_name = "model.onnx"
-    process_path = os.path.join("temp", id)
+    process_path = os.path.join("/users/local/j20morli/temp", id)
     onnx_path = os.path.join(process_path, onnx_name)
     inferred_path = os.path.join(process_path, "inferred_" + onnx_name)
     accelerator_path = os.path.join(process_path, "accelerator.yaml")
