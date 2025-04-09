@@ -25,6 +25,9 @@ logging.disable(logging.CRITICAL)
 def zigzag_performance(config):
     time0 = time.time()
     # Extract config
+    result = {}
+    opts = ["EDP"]
+
     model_config = config["model_config"]
     hardware_config = config["hardware_config"]
     mapping_config = config["mapping_config"]
@@ -57,6 +60,10 @@ def zigzag_performance(config):
         hidden_dims=model_config["embed_dim"],
         mlp_ratios=model_config["mlp_ratio"],
     )
+
+    n_parameters = sum(p.numel() for p in torch_model.parameters() if p.requires_grad)
+    result["n_parameters"] = n_parameters
+
     inputs = torch.rand(1, 3, 224, 224)
     # onnx_model = torch.onnx.dynamo_export(torch_model, args).save(path, external_data=True)
     torch.onnx.export(torch_model, inputs, onnx_path)
@@ -65,8 +72,7 @@ def zigzag_performance(config):
     )
     onnx.save(inferred_model, inferred_path)
     time1 = time.time()
-    result = {}
-    opts = ["EDP"]
+
     for opt in opts:
         result[opt] = {}
         energy, latency, cme = api.get_hardware_performance_zigzag(
