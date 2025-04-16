@@ -1,6 +1,7 @@
 import os
 import math
 import random
+import copy
 import json
 from tqdm.contrib.concurrent import process_map
 import multiprocessing
@@ -38,7 +39,7 @@ def zigzag_performance(config):
     id = id.split("-")[-1]
 
     onnx_name = "model.onnx"
-    process_path = os.path.join("/users/local/j20morli/temp", id)
+    process_path = os.path.join("/home/j20morli/Documents/Projects/AutoHWFormer/temp", id)
     onnx_path = os.path.join(process_path, onnx_name)
     inferred_path = os.path.join(process_path, "inferred_" + onnx_name)
     accelerator_path = os.path.join(process_path, "accelerator.yaml")
@@ -98,6 +99,7 @@ def zigzag_performance(config):
 
 
 def sample_hardware_configs(choices, hardware_config) :
+    hw_config = copy.deepcopy(hardware_config)
     for key, item in choices.items() :
         for key2, item2 in item.items() :
             if isinstance(item2, dict) :
@@ -105,7 +107,8 @@ def sample_hardware_configs(choices, hardware_config) :
                     hardware_config[key][key2][key3] = random.choice(item3)
             else :
                 hardware_config[key][key2] = random.choice(item2)
-
+    return hw_config
+    
 class Config_Generator:
     def __init__(self, max_iter, nn_choices, hw_choices, mapping_config, hardware_config):
         self.max_iter = max_iter
