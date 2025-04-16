@@ -77,14 +77,19 @@ def zigzag_performance(config):
 
     for opt in opts:
         result[opt] = {}
-        energy, latency, cme = api.get_hardware_performance_zigzag(
-            workload=inferred_path,
-            accelerator=accelerator_path,
-            mapping=mapping_path,
-            opt=opt,
-        )
-        result[opt]["energy"] = energy
-        result[opt]["latency"] = latency
+        try :
+            energy, latency, cme = api.get_hardware_performance_zigzag(
+                workload=inferred_path,
+                accelerator=accelerator_path,
+                mapping=mapping_path,
+                opt=opt,
+            )
+            result[opt]["energy"] = energy
+            result[opt]["latency"] = latency
+        except Exception as e :
+            print(e)
+            result[opt]["energy"] = 0
+            result[opt]["latency"] = 0    
         # result[opt]["cme"] = cme
     time2 = time.time()
 
