@@ -1,5 +1,6 @@
 import os
 import math
+import random
 import json
 from tqdm.contrib.concurrent import process_map
 import multiprocessing
@@ -96,11 +97,21 @@ def zigzag_performance(config):
     return True
 
 
+def sample_hardware_configs(choices, hardware_config) :
+    for key, item in choices.items() :
+        for key2, item2 in item.items() :
+            if isinstance(item2, dict) :
+                for key3, item3 in item2.items() :
+                    hardware_config[key][key2][key3] = random.choice(item3)
+            else :
+                hardware_config[key][key2] = random.choice(item2)
+
 class Config_Generator:
-    def __init__(self, max_iter, choices, mapping_config, hardware_config):
+    def __init__(self, max_iter, nn_choices, hw_choices, mapping_config, hardware_config):
         self.max_iter = max_iter
         self.i = 0
-        self.choices = choices
+        self.nn_choices = nn_choices
+        self.hw_choices = hw_choices
 
         self.mapping_config = mapping_config
         self.hardware_config = hardware_config
@@ -110,8 +121,8 @@ class Config_Generator:
         if self.i < self.max_iter:
             self.i += 1
 
-            config["model_config"] = sample_configs(self.choices)
-            config["hardware_config"] = self.hardware_config
+            config["model_config"] = sample_configs(self.nn_choices)
+            config["hardware_config"] = sample_hardware_configs(self.hw_choices, self.hardware_config)
             config["mapping_config"] = mapping_config
             return config
         else:
@@ -129,11 +140,27 @@ if __name__ == "__main__":
     mapping_path = "inputs/mapping/tpu_like.yaml"
 
     update_config_from_file("config/supernet-B1.yaml")
-    choices = {
+    nn_choices = {
         "num_heads": cfg.SEARCH_SPACE.NUM_HEADS,
         "mlp_ratio": cfg.SEARCH_SPACE.MLP_RATIO,
         "embed_dim": cfg.SEARCH_SPACE.EMBED_DIM,
         "depth": cfg.SEARCH_SPACE.DEPTH,
+    }
+    hw_choices = {
+        "memories": {
+            "rf_128B": {
+                "size": [512, 1024, 2048],
+            },
+            "rf_2B":{
+                "size" : [4, 8, 16, 32],
+            },
+            "sram_2MB":{
+                "size": [8388608, 16777216, 33554432],
+            },
+        },
+        "operational_array" : {
+            "sizes": [[16, 16], [24, 24], [32, 32], [48, 48]]
+        },
     }
 
     with open(accelerator_path, "r") as accelerator_file:
@@ -155,7 +182,7 @@ if __name__ == "__main__":
     chunksize = 1
 
     config_generator = Config_Generator(
-        num_tasks, choices, mapping_config, hardware_config
+        num_tasks, nn_choices, hw_choices, mapping_config, hardware_config
     )
     config_iterator = iter(config_generator)
     r = process_map(
