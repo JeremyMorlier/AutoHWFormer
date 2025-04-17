@@ -176,17 +176,10 @@ if __name__ == "__main__":
     with open(mapping_path, "r") as mapping_file:
         mapping_config = yaml.safe_load(mapping_file)
 
-    # test_config = sample_configs(choices)
-
-    # config = {"model_config":test_config, "hardware_config": hardware_config, "mapping_config": mapping_config}
-    # new_config, result = zigzag_performance(config)
-    # print(result["preprocess"], result["process"], result["energy"], result["latency"])
-
     num_tasks = 10000
     num_workers = min(num_tasks, 32, os.cpu_count() + 4)
     chunksize = math.ceil(num_tasks / num_workers)
 
-    num_workers = 8
     chunksize = 1
 
     config_generator = Config_Generator(
@@ -200,16 +193,4 @@ if __name__ == "__main__":
         chunksize=chunksize,
     )
 
-    # r = []
-    # for config in tqdm(config_iterator) :
-    #     r.append(zigzag_performance(config))
     print(r)
-    # r2 = [int(element[-1]) for element in r]
-    # print(list(set(r2)))
-    # somme = 0
-    # for element in list(set(r2)) :
-    #     somme += r2.count(element)
-    #     print("id ", element, " nb repetitions : ", r2.count(element))
-    # print(somme, chunksize)
-    # #print(list(set(r)))
-    # # print(r)
