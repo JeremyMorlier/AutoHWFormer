@@ -176,7 +176,7 @@ if __name__ == "__main__":
     with open(mapping_path, "r") as mapping_file:
         mapping_config = yaml.safe_load(mapping_file)
 
-    num_tasks = 10000
+    num_tasks = 100000
     num_workers = min(num_tasks, 32, os.cpu_count() + 4)
     chunksize = math.ceil(num_tasks / num_workers)
 
