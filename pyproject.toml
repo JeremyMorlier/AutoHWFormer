@@ -12,6 +12,7 @@ dependencies = [
     "psutil>=7.0.0",
     "python-hostlist>=2.2.1",
     "scikit-image>=0.25.2",
+    "stream-dse",
     "timm>=1.0.15",
     "torch==2.5.0",
     "tqdm>=4.67.1",
@@ -34,6 +35,9 @@ dev = []
 [tool.ruff]
 line-length = 120
 indent-width = 4
+
+[tool.uv.sources]
+stream-dse = { git = "https://github.com/KULeuven-MICAS/stream" }
 
 [lint]
 select = [
