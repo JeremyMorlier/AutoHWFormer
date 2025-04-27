@@ -8,6 +8,7 @@ import multiprocessing
 import time
 import yaml
 from pathlib import Path
+import argparse
 
 import torch
 
@@ -28,6 +29,12 @@ logging.captureWarnings(True)
 logging.disable(logging.CRITICAL)
 
 
+def argparser(add_help=True) :
+    parser = argparse.ArgumentParser(description="Slurm launcher, facilitates the deploiement of this repo training scripts to slurm environments", add_help=add_help)
+    parser.add_argument("--path", type=str, default="temp", help="Path to store temporary and final files")
+    parser.add_argument("--tool", type=str, default="stream", help="tool to use (stream or zigzag)")
+    return parser
+    
 def stream_performance(config) :
     time0 = time.time()
 
@@ -47,7 +54,7 @@ def stream_performance(config) :
     id = id.split("-")[-1]
 
     onnx_name = "model.onnx"
-    process_path = os.path.join("temp", id)
+    process_path = os.path.join(config["path"], id)
     onnx_path = os.path.join(process_path, onnx_name)
     inferred_path = os.path.join(process_path, "inferred_" + onnx_name)
     accelerator_path = os.path.join(process_path, "accelerator.yaml")
@@ -222,7 +229,7 @@ def stream_sample_hardware_configs(choices) :
     return hardware_config
 
 class Config_Generator:
-    def __init__(self, max_iter, nn_choices, hw_choices, mapping_config, hardware_config):
+    def __init__(self, max_iter, nn_choices, hw_choices, mapping_config, hardware_config, path):
         self.max_iter = max_iter
         self.i = 0
         self.nn_choices = nn_choices
@@ -230,6 +237,7 @@ class Config_Generator:
 
         self.mapping_config = mapping_config
         self.hardware_config = hardware_config
+        self.path = path
 
     def __next__(self):
         config = {}
@@ -239,6 +247,7 @@ class Config_Generator:
             config["model_config"] = sample_configs(self.nn_choices)
             config["hardware_config"] = stream_sample_hardware_configs(self.hw_choices)
             config["mapping_config"] = self.mapping_config
+            config["path"] = self.path
             return config
         else:
             raise StopIteration
@@ -250,7 +259,10 @@ class Config_Generator:
         return self.max_iter
 
 
-if __name__ == "__main__":
+if __name__ == "__main__" :
+
+
+    args = argparser().parse_args()
     # accelerator_path = "inputs/hardware/tpu_like.yaml"
     # mapping_path = "inputs/stream/examples/mapping/tpu_like.yaml"
 
@@ -295,7 +307,7 @@ if __name__ == "__main__":
 
     chunksize = 1
 
-    config_generator = Config_Generator(num_tasks, nn_choices, stream_hw_choices, mapping_config=None, hardware_config=None)
+    config_generator = Config_Generator(num_tasks, nn_choices, stream_hw_choices, mapping_config=None, hardware_config=None, path=args.path)
     config_iterator = iter(config_generator)
     r = process_map(
         stream_performance,

@@ -7,4 +7,4 @@
 #SBATCH --error=log/%x/%j/errors.err
 
 source .venv/bin/activate
-srun python3 ZigZag_space.py
+srun python3 ZigZag_space.py --path /users/local/j20morli/temp/
