@@ -17,6 +17,7 @@ from stream.api import optimize_allocation_ga
 
 import onnx
 from onnx import shape_inference
+from onnxsim import simplify
 
 from train_supernet import sample_configs
 from model.transformer_onnx import SuperNet
@@ -25,12 +26,12 @@ from hardware_generator import edge_tpu, edge_tpu_core, edge_tpu_mapping, to_yam
 import logging
 
 # Disable ZigZag Logging and Pytorch Warnings
-logging.captureWarnings(True)
-logging.disable(logging.CRITICAL)
+# logging.captureWarnings(True)
+# logging.disable(logging.CRITICAL)
 
 
 def argparser(add_help=True) :
-    parser = argparse.ArgumentParser(description="Slurm launcher, facilitates the deploiement of this repo training scripts to slurm environments", add_help=add_help)
+    parser = argparse.ArgumentParser(description="Evaluate the hardware performance of the neural network space", add_help=add_help)
     parser.add_argument("--path", type=str, default="temp", help="Path to store temporary and final files")
     parser.add_argument("--tool", type=str, default="stream", help="tool to use (stream or zigzag)")
     return parser
@@ -79,14 +80,17 @@ def stream_performance(config) :
     result["n_parameters"] = n_parameters
 
     inputs = torch.rand(1, 3, 224, 224)
-    # onnx_model = torch.onnx.dynamo_export(torch_model, args).save(path, external_data=True)
     torch.onnx.export(torch_model, inputs, onnx_path)
-    inferred_model = shape_inference.infer_shapes(onnx.load(onnx_path), strict_mode=True)
+    inferred_model, check = simplify(onnx.load(onnx_path))
+    #inferred_model = shape_inference.infer_shapes(, strict_mode=True)
     onnx.save(inferred_model, inferred_path)
 
     # Generate Hardware and Mapping Config
+    pooling_core_path = os.path.abspath("inputs/stream/examples/hardware/cores/pooling.yaml")
+    simd_core_path = os.path.abspath("inputs/stream/examples/hardware/cores/pooling.yaml")
+    offchip_core_path = os.path.abspath("inputs/stream/examples/hardware/cores/pooling.yaml")
     core = edge_tpu_core(hardware_config["n_SIMDS"], hardware_config["n_computes_lanes"], hardware_config["PE_Memory"], hardware_config["register_file_size"])
-    soc = edge_tpu(hardware_config["xPE"], hardware_config["yPE"], os.path.abspath(core_path), ["pooling.yaml", "simd.yaml"], "offchip.yaml", 32, 0)
+    soc = edge_tpu(hardware_config["xPE"], hardware_config["yPE"], os.path.abspath(core_path), [pooling_core_path, simd_core_path], offchip_core_path, 32, 0)
     mapping = edge_tpu_mapping(hardware_config["xPE"], hardware_config["yPE"], ["pooling.yaml", "simd.yaml"])
     to_yaml(core, core_path)
     to_yaml(soc, soc_path)
@@ -276,8 +280,8 @@ if __name__ == "__main__" :
     stream_hw_choices = {
         "n_SIMDS": [16, 32, 64, 128],
         "n_computes_lanes": [1, 2, 4, 8], 
-        "PE_Memory": [element*1024*1024 for element in [0.5, 1, 2, 3, 4]],
-        "register_file_size": [element*1024 for element in [8, 16, 32, 48, 64]],
+        "PE_Memory": [int(element*1024*1024) for element in [0.5, 1, 2, 3, 4]],
+        "register_file_size": [int(element*1024) for element in [8, 16, 32, 48, 64]],
         "xPE": [1, 2, 4, 6, 8],
         "yPE": [1, 2, 4, 6, 8],
     }
@@ -303,6 +307,7 @@ if __name__ == "__main__" :
 
     num_tasks = 100000
     num_workers = min(num_tasks, 32, os.cpu_count() + 4)
+
     chunksize = math.ceil(num_tasks / num_workers)
 
     chunksize = 1

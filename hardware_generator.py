@@ -64,12 +64,12 @@ def edge_tpu_core(n_SIMDS, n_compute_lanes, PE_memory, register_file_size) :
         "operational_array" : {
             "unit_energy": 0.04,
             "unit_area": 1,
-            "dimensions": [n_SIMDS, n_compute_lanes],
-            "sizes": [32, 32],
+            "dimensions": ["D1", "D2"],
+            "sizes": [n_SIMDS, n_compute_lanes],
         },
         "dataflows" : {
-            "D1": "K, 32",
-            "D2": "C, 32"
+            "D1": ["K, 32"],
+            "D2": ["C, 32"]
         },
     }
     return hardware_architecture
@@ -88,45 +88,46 @@ def edge_tpu_mapping(xPEs, yPEs, additional_cores) :
         {"name": "default",
         "core_allocation": [element for element in range(0, xPEs*yPEs)],
         "intra_core_tiling": ["D, all"],
-        "inter_core_tiling": "K, *",
+        "inter_core_tiling": ["K, *"],
         },
 
         {"name": "Conv",
         "core_allocation": [element for element in range(0, xPEs*yPEs)],
-        "intra_core_tiling": "OY, all",
-        "inter_core_tiling": " K, *",
+        "intra_core_tiling": ["OY, all"],
+        "inter_core_tiling": ["K, *"],
         },
         {"name": "Gemm",
         "core_allocation": [element for element in range(0, xPEs*yPEs)],
-        "intra_core_tiling": "D, all",
-        "inter_core_tiling": "H, *"},
+        "intra_core_tiling": ["D, all"],
+        "inter_core_tiling": ["H, *"]},
 
         {"name": "Pool",
         "core_allocation": pooling_cores,
-        "intra_core_tiling": "OY, all",
-        "inter_core_tiling": " K, *",},
+        "intra_core_tiling": ["OY, all"],
+        "inter_core_tiling": ["K, *"],},
 
         {"name": "MaxPool",
         "core_allocation": pooling_cores,
-        "intra_core_tiling": " OY, all",
-        "inter_core_tiling": "K, *"},
+        "intra_core_tiling": ["OY, all"],
+        "inter_core_tiling": ["K, *"]},
 
         {"name": "AveragePool",
         "core_allocation": pooling_cores,
-        "intra_core_tiling": "OY, all",
-        "inter_core_tiling":"K, *"},
+        "intra_core_tiling": ["OY, all"],
+        "inter_core_tiling":["K, *"]},
         {
         "name": "GlobalAveragePool",
         "core_allocation": pooling_cores,
-        "intra_core_tiling": "OY, all",
-        "inter_core_tiling": "K, *"},
+        "intra_core_tiling": ["OY, all"],
+        "inter_core_tiling": ["K, *"]},
 
         {"name": "Add",
         "core_allocation": adder_cores,
-        "intra_core_tiling": "D, all",
-        "inter_core_tiling": "H, *"},
+        "intra_core_tiling": ["D, all"],
+        "inter_core_tiling": ["H, *"]},
 
     ]
+    return mapping_config
 def edge_tpu(xPEs, yPEs, core, additional_cores, offchip_core, bandwith, unit_energy_cost) :
 
 
@@ -138,7 +139,7 @@ def edge_tpu(xPEs, yPEs, core, additional_cores, offchip_core, bandwith, unit_en
         "core_connectivity": [
 
         ],
-        "bandwith": bandwith,
+        "bandwidth": bandwith,
         "unit_energy_cost": unit_energy_cost,
     }
 
@@ -148,7 +149,7 @@ def edge_tpu(xPEs, yPEs, core, additional_cores, offchip_core, bandwith, unit_en
             hardware_architecture["cores"][xPE + yPE*xPEs] = core
 
     if additional_cores is not None :
-        i = xPEs + yPEs*xPEs + 1
+        i =  yPEs*xPEs
         for additional_core in additional_cores :
             hardware_architecture["cores"][i] = additional_core
             i += 1
@@ -170,7 +171,7 @@ def edge_tpu(xPEs, yPEs, core, additional_cores, offchip_core, bandwith, unit_en
     if additional_cores is not None :
         for yPE in range(0, yPEs) :
             for xPE in range(0, xPEs) :
-                i = xPEs + yPEs*xPEs + 1
+                i = yPEs*xPEs
                 for additional_core in additional_cores :
                     hardware_architecture["core_connectivity"].append(f"{xPE + yPE*xPEs}, {i}")
                     i += 1
