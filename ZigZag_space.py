@@ -27,8 +27,8 @@ from hardware_generator import edge_tpu, edge_tpu_core, edge_tpu_mapping, to_yam
 import logging
 
 # Disable ZigZag Logging and Pytorch Warnings
-# # logging.captureWarnings(True)
-# # logging.disable(logging.CRITICAL)
+logging.captureWarnings(True)
+logging.disable(logging.CRITICAL)
 
 
 def argparser(add_help=True) :
@@ -43,14 +43,12 @@ def stream_performance(config) :
 
     # Extract config and constants
     result = {}
-    opts = ["EDP"]
     modes = ["fused"]
     layer_stacks = [tuple(range(0, 11)), tuple(range(11, 22))] + list((i,) for i in range(22, 49))
 
 
     model_config = config["model_config"]
     hardware_config = config["hardware_config"]
-    mapping_config = config["mapping_config"]
 
     # Multiprocessing and paths
     id = multiprocessing.current_process().name
@@ -60,7 +58,6 @@ def stream_performance(config) :
     process_path = os.path.join(config["path"], id)
     onnx_path = os.path.join(process_path, onnx_name)
     inferred_path = os.path.join(process_path, "inferred_" + onnx_name)
-    accelerator_path = os.path.join(process_path, "accelerator.yaml")
     mapping_path = os.path.join(process_path, "mapping.yaml")
     result_path = os.path.join(process_path, "result.txt")
 
@@ -84,15 +81,9 @@ def stream_performance(config) :
     inputs = torch.rand(1, 3, 224, 224)
     torch.onnx.export(torch_model, inputs, onnx_path)
     inferred_model, check = simplify(onnx.load(onnx_path))
-    #inferred_model = shape_inference.infer_shapes(, strict_mode=True)
-    inferred_model, check = simplify(onnx.load(onnx_path))
-    #inferred_model = shape_inference.infer_shapes(, strict_mode=True)
     onnx.save(inferred_model, inferred_path)
 
     # Generate Hardware and Mapping Config
-    pooling_core_path = os.path.abspath("inputs/stream/examples/hardware/cores/pooling.yaml")
-    simd_core_path = os.path.abspath("inputs/stream/examples/hardware/cores/pooling.yaml")
-    offchip_core_path = os.path.abspath("inputs/stream/examples/hardware/cores/pooling.yaml")
     pooling_core_path = os.path.abspath("inputs/stream/examples/hardware/cores/pooling.yaml")
     simd_core_path = os.path.abspath("inputs/stream/examples/hardware/cores/pooling.yaml")
     offchip_core_path = os.path.abspath("inputs/stream/examples/hardware/cores/pooling.yaml")
@@ -110,21 +101,6 @@ def stream_performance(config) :
 
     for mode in modes:
         result[mode] = {}
-        scme = optimize_allocation_ga(
-            hardware=soc_path,
-            workload=inferred_path,
-            mapping=mapping_path,
-            mode=mode,
-            layer_stacks=layer_stacks,
-            nb_ga_generations=4,
-            nb_ga_individuals=4,
-            experiment_id=id,
-            output_path=process_path,
-            skip_if_exists=False,
-        )
-        result[mode]["scme"] = vars(scme)
-        result[mode]["energy"] = scme["energy"]
-        result[mode]["latency"] = scme["latency"]
         try:
             scme = optimize_allocation_ga(
                 hardware=soc_path,
