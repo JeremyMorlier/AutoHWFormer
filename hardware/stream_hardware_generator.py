@@ -2,7 +2,7 @@
 import yaml
 
 
-def edge_tpu_core(n_SIMDS, n_compute_lanes, PE_memory, register_file_size) :
+def stream_edge_tpu_core(n_SIMDS, n_compute_lanes, PE_memory, register_file_size) :
     hardware_architecture = {
         "name": "edge_tpu_like_core",
         "memories": {
@@ -74,7 +74,7 @@ def edge_tpu_core(n_SIMDS, n_compute_lanes, PE_memory, register_file_size) :
     }
     return hardware_architecture
 
-def edge_tpu_mapping(xPEs, yPEs, additional_cores) :
+def stream_edge_tpu_mapping(xPEs, yPEs, additional_cores) :
 
     pooling_cores = []
     adder_cores = []
@@ -128,7 +128,7 @@ def edge_tpu_mapping(xPEs, yPEs, additional_cores) :
 
     ]
     return mapping_config
-def edge_tpu(xPEs, yPEs, core, additional_cores, offchip_core, bandwith, unit_energy_cost) :
+def stream_edge_tpu(xPEs, yPEs, core, additional_cores, offchip_core, bandwith, unit_energy_cost) :
 
 
     hardware_architecture = {
@@ -182,4 +182,4 @@ def to_yaml(hardware_architecture, path) :
         yaml.safe_dump(hardware_architecture, yaml_file, sort_keys=False)
 
 if __name__ == "__main__" :
-    to_yaml(edge_tpu(4, 4, "tpu_like.yaml", ["pooling.yaml", "simd.yaml"], "offchip.yaml", 32, 0), "test.yaml")
+    to_yaml(stream_edge_tpu(4, 4, "tpu_like.yaml", ["pooling.yaml", "simd.yaml"], "offchip.yaml", 32, 0), "test.yaml")
