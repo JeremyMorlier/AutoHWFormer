@@ -1,12 +1,10 @@
 import os
 import math
 import random
-import copy
 import json
 from tqdm.contrib.concurrent import process_map
 import multiprocessing
 import time
-import yaml
 from pathlib import Path
 import argparse
 
@@ -16,7 +14,6 @@ from zigzag import api
 from stream.api import optimize_allocation_ga
 
 import onnx
-from onnx import shape_inference
 from onnxsim import simplify
 
 from train_supernet import sample_configs
@@ -26,9 +23,9 @@ from hardware.stream_hardware_generator import stream_edge_tpu, stream_edge_tpu_
 from hardware.zigzag_hardware_generator import zigzag_edge_tpu_hardware, zigzag_edge_tpu_mapping
 import logging
 
-# # Disable ZigZag Logging and Pytorch Warnings
-# logging.captureWarnings(True)
-# logging.disable(logging.CRITICAL)
+# Disable ZigZag Logging and Pytorch Warnings
+logging.captureWarnings(True)
+logging.disable(logging.CRITICAL)
 
 
 def argparser(add_help=True) :
