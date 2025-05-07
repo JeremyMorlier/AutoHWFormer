@@ -219,7 +219,6 @@ if __name__ == "__main__" :
 
     num_tasks = 100000
     num_workers = min(num_tasks, os.cpu_count() + 4)
-    num_workers = 1
     chunksize = math.ceil(num_tasks / num_workers)
 
     chunksize = 1
