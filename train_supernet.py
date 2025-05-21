@@ -101,7 +101,11 @@ def train_one_epoch(
         if config is None:
             selected_config = sample_configs(choices)
         select_config(model, selected_config, mode, retrain_config)
-
+        config_params = model.get_sampled_params_numel(selected_config)
+        while (config is None and config_params >= 3E7) :
+            selected_config = sample_configs(choices)
+            select_config(model, selected_config, mode, retrain_config)
+            config_params = model.get_sampled_params_numel(selected_config)
         # # sample random config
         # if mode == 'super':
         #     config = sample_configs(choices=choices)
@@ -201,6 +205,11 @@ def evaluate(
     if config is None:
         selected_config = sample_configs(choices)
     model_module = select_config(model, selected_config, mode, retrain_config)
+    config_params = model.get_sampled_params_numel(selected_config)
+    while (config is None and config_params >= 3E7) :
+        selected_config = sample_configs(choices)
+        select_config(model, selected_config, mode, retrain_config)
+        config_params = model.get_sampled_params_numel(selected_config)
     # if mode == 'super':
     #     config = sample_configs(choices=choices)
     #     model_module = unwrap_model(model)
