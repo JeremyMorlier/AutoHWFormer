@@ -45,14 +45,11 @@ def sample_configs(choices):
 
 
 def select_config(model: torch.nn.Module, config, mode="super", retrain_config=None):
-    if mode == "super":
-        model_module = unwrap_model(model)
-        model_module.set_sample_config(config=config)
-    elif mode == "retrain":
+    model_module = unwrap_model(model)
+    if mode == "retrain":
         config = retrain_config
-        model_module = unwrap_model(model)
-        model_module.set_sample_config(config=config)
-    return model_module
+    model_module.set_sample_config(config=config)
+    return model_module, model_module.get_sampled_params_numel(config)
 
 
 def train_one_epoch(
@@ -100,12 +97,10 @@ def train_one_epoch(
         # Sample Config
         if config is None:
             selected_config = sample_configs(choices)
-        select_config(model, selected_config, mode, retrain_config)
-        config_params = model.get_sampled_params_numel(selected_config)
+        _, config_params = select_config(model, selected_config, mode, retrain_config)
         while (config is None and config_params >= 3E7) :
             selected_config = sample_configs(choices)
-            select_config(model, selected_config, mode, retrain_config)
-            config_params = model.get_sampled_params_numel(selected_config)
+            _, config_params = select_config(model, selected_config, mode, retrain_config)
         # # sample random config
         # if mode == 'super':
         #     config = sample_configs(choices=choices)
@@ -204,12 +199,10 @@ def evaluate(
     # Sample Config
     if config is None:
         selected_config = sample_configs(choices)
-    model_module = select_config(model, selected_config, mode, retrain_config)
-    config_params = model.get_sampled_params_numel(selected_config)
+    model_module, config_params = select_config(model, selected_config, mode, retrain_config)
     while (config is None and config_params >= 3E7) :
         selected_config = sample_configs(choices)
-        select_config(model, selected_config, mode, retrain_config)
-        config_params = model.get_sampled_params_numel(selected_config)
+        model_module, config_params = select_config(model, selected_config, mode, retrain_config)
     # if mode == 'super':
     #     config = sample_configs(choices=choices)
     #     model_module = unwrap_model(model)
