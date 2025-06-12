@@ -199,9 +199,11 @@ def evaluate(
     # Sample Config
     if config is None:
         selected_config = sample_configs(choices)
+        print(selected_config)
     model_module, config_params = select_config(model, selected_config, mode, retrain_config)
     while (config is None and config_params >= 3E7) :
         selected_config = sample_configs(choices)
+        print(selected_config)
         model_module, config_params = select_config(model, selected_config, mode, retrain_config)
     # if mode == 'super':
     #     config = sample_configs(choices=choices)
