@@ -193,13 +193,13 @@ def evaluate(
     # switch to evaluation mode
     model.eval()
 
+    print(config is not None, config is None)
     if config is not None:
         selected_config = config
-
-    # Sample Config
-    if config is None:
+    else :
         selected_config = sample_configs(choices)
-        print(selected_config)
+    # Sample Config
+    print(selected_config)
     model_module, config_params = select_config(model, selected_config, mode, retrain_config)
     while (config is None and config_params >= 3E7) :
         selected_config = sample_configs(choices)
