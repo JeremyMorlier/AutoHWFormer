@@ -84,9 +84,7 @@ def train_one_epoch(
     if mode == "retrain":
         config = retrain_config
         model_module = unwrap_model(model)
-        print(config)
         model_module.set_sample_config(config=config)
-        print(model_module.get_sampled_params_numel(config))
 
     if config is not None:
         selected_config = config
@@ -193,17 +191,14 @@ def evaluate(
     # switch to evaluation mode
     model.eval()
 
-    print(config is not None, config is None)
     if config is not None:
         selected_config = config
     else :
         selected_config = sample_configs(choices)
     # Sample Config
-    print(selected_config)
     model_module, config_params = select_config(model, selected_config, mode, retrain_config)
     while (config is None and config_params >= 3E7) :
         selected_config = sample_configs(choices)
-        print(selected_config)
         model_module, config_params = select_config(model, selected_config, mode, retrain_config)
     # if mode == 'super':
     #     config = sample_configs(choices=choices)
@@ -214,8 +209,8 @@ def evaluate(
     #     model_module = unwrap_model(model)
     #     model_module.set_sample_config(config=config)
 
-    print("sampled model config: {}".format(config))
-    parameters = model_module.get_sampled_params_numel(config)
+    print("sampled model config: {}".format(selected_config))
+    parameters = model_module.get_sampled_params_numel(selected_config)
     print("sampled model parameters: {}".format(parameters))
 
     for images, target in metric_logger.log_every(data_loader, 10, header):
