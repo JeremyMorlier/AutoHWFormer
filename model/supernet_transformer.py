@@ -370,8 +370,6 @@ class TransformerEncoderLayer(nn.Module):
             return x
 
         # compute attn
-        start_time = time.time()
-        print(x.shape)
         with record_function("Multi Head Attention"):
             residual = x
             x = self.maybe_layer_norm(self.attn_layer_norm, x, before=True)
@@ -380,9 +378,7 @@ class TransformerEncoderLayer(nn.Module):
             x = self.drop_path(x)
             x = residual + x
             x = self.maybe_layer_norm(self.attn_layer_norm, x, after=True)
-        print("attn :", time.time() - start_time)
         # compute the ffn
-        start_time = time.time()
         with record_function("FFN"):
             residual = x
             x = self.maybe_layer_norm(self.ffn_layer_norm, x, before=True)
@@ -395,7 +391,6 @@ class TransformerEncoderLayer(nn.Module):
             x = self.drop_path(x)
             x = residual + x
             x = self.maybe_layer_norm(self.ffn_layer_norm, x, after=True)
-        print("ffn :", time.time() - start_time)
         return x
 
     def maybe_layer_norm(self, layer_norm, x, before=False, after=False):
