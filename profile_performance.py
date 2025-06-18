@@ -149,12 +149,12 @@ def main(args):
         torch_profile=True,
     )
 
-    profile_train.export_chrome_trace("trace_train.json")
+    profile_train.export_chrome_trace(f"trace_train_{args.gpu}.json")
     profile_eval = profile_evaluate(
         model, random_inputs, activities=activities, torch_profile=True
     )
 
-    profile_eval.export_chrome_trace("trace_eval.json")
+    profile_eval.export_chrome_trace(f"trace_eval_{args.gpu}.json")
     print(profile_train)
     print(profile_train.key_averages().table(sort_by=sort_by_keyword, row_limit=10))
     print(profile_eval.key_averages().table(sort_by=sort_by_keyword, row_limit=10))
