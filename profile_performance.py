@@ -137,7 +137,7 @@ def main(args):
     random_inputs = torch.rand(100, 3, 224, 224)
     random_targets = torch.rand(100, 1000)
 
-    print(model.blocks[0].attn.get_complexity(196 + 1))
+    print(model_without_ddp.blocks[0].attn.get_complexity(196 + 1))
     profile_train = profile_training(
         model,
         random_inputs,
