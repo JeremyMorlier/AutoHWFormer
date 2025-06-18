@@ -105,6 +105,7 @@ def main(args):
         profile=True,
     )
     model.to(device)
+    model.compile(mode="reduce-overhead", fullgraph=True)
     if args.distributed and args.sync_bn:
         model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
 
