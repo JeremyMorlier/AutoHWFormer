@@ -133,7 +133,7 @@ class AttentionSuper(nn.Module):
 
         self.proj = LinearSuper(super_embed_dim, super_embed_dim)
 
-        self.attn_drop = nn.Dropout(attn_drop)
+        self.attn_drop = attn_drop
         self.proj_drop = nn.Dropout(proj_drop)
 
     def set_sample_config(
@@ -203,39 +203,20 @@ class AttentionSuper(nn.Module):
                 qkv[2],
             )  # make torchscript happy (cannot use tensor as tuple)
 
-            x = torch.nn.functional.scaled_dot_product_attention(q, k, v, None).transpose(1, 2).reshape(B, N, -1)
-            # attn = (q @ k.transpose(-2, -1)) * self.sample_scale
-            # if self.relative_position:
-            #     r_p_k = self.rel_pos_embed_k(N, N)
-            #     attn = (
-            #         attn
-            #         + (
-            #             q.permute(2, 0, 1, 3).reshape(N, self.sample_num_heads * B, -1)
-            #             @ r_p_k.transpose(2, 1)
-            #         )
-            #         .transpose(1, 0)
-            #         .reshape(B, self.sample_num_heads, N, N)
-            #         * self.sample_scale
-            #     )
+            qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, -1).permute(2, 0, 3, 1, 4)
+            q, k, v = qkv[0], qkv[1], qkv[2]
 
-            # attn = attn.softmax(dim=-1)
-            # attn = self.attn_drop(attn)
+            if self.relative_position:
+                q = q + self.rel_pos_embed_k.unsqueeze(0)
+                v = v + self.rel_pos_embed_v.unsqueeze(0)
 
-            # x = (attn @ v).transpose(1, 2).reshape(B, N, -1)
-            # if self.relative_position:
-            #     r_p_v = self.rel_pos_embed_v(N, N)
-            #     attn_1 = attn.permute(2, 0, 1, 3).reshape(
-            #         N, B * self.sample_num_heads, -1
-            #     )
-            #     # The size of attention is (B, num_heads, N, N), reshape it to (N, B*num_heads, N) and do batch matmul with
-            #     # the relative position embedding of V (N, N, head_dim) get shape like (N, B*num_heads, head_dim). We reshape it to the
-            #     # same size as x (B, num_heads, N, hidden_dim)
-            #     x = x + (attn_1 @ r_p_v).transpose(1, 0).reshape(
-            #         B, self.sample_num_heads, N, -1
-            #     ).transpose(2, 1).reshape(B, N, -1)
+            # Use PyTorch's built-in scaled dot product attention
+            attn_output, attn_weights = F.scaled_dot_product_attention(
+                q.transpose(0, 1), k.transpose(0, 1), v.transpose(0, 1),
+                dropout_p=self.dropout if self.training else 0.0
+            )
 
-            if self.fc_scale:
-                x = x * (self.super_embed_dim / self.sample_qk_embed_dim)
+            x = attn_output.transpose(0, 1).reshape(B, N, -1)
             x = self.proj(x)
             x = self.proj_drop(x)
         return x
