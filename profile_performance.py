@@ -104,7 +104,7 @@ def main(args):
         abs_pos=not args.no_abs_pos,
         profile=True,
     )
-    model.to(device)
+    model = model.to(device)
     # model.compile(mode="reduce-overhead", fullgraph=True)
     if args.distributed and args.sync_bn:
         model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
