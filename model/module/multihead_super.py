@@ -209,8 +209,8 @@ class AttentionSuper(nn.Module):
             q, k, v = qkv[0], qkv[1], qkv[2]
 
             if self.relative_position:
-                q = q + self.rel_pos_embed_k.unsqueeze(0)
-                v = v + self.rel_pos_embed_v.unsqueeze(0)
+                q = q + self.rel_pos_embed_k(N, N).unsqueeze(0)
+                v = v + self.rel_pos_embed_v(N, N).unsqueeze(0)
 
             # Use PyTorch's built-in scaled dot product attention
             attn_output, attn_weights = F.scaled_dot_product_attention(
