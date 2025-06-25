@@ -203,7 +203,7 @@ class AttentionSuper(nn.Module):
                 qkv[2],
             )  # make torchscript happy (cannot use tensor as tuple)
 
-            x = torch.nn.functional.scaled_dot_product_attention(q, k, v, None)
+            x = torch.nn.functional.scaled_dot_product_attention(q, k, v, None).transpose(1, 2).reshape(B, N, -1)
             # attn = (q @ k.transpose(-2, -1)) * self.sample_scale
             # if self.relative_position:
             #     r_p_k = self.rel_pos_embed_k(N, N)
