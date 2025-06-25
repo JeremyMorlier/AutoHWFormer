@@ -191,7 +191,7 @@ class AttentionSuper(nn.Module):
     def forward(self, x):
         with record_function("attn"):
             B, N, C = x.shape
-
+            print(x.shape, B, N, 3, self.sample_num_heads, -1)
             qkv = (
                 self.qkv(x)
                 .reshape(B, N, 3, self.sample_num_heads, -1)
