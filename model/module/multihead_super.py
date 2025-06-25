@@ -192,8 +192,10 @@ class AttentionSuper(nn.Module):
         with record_function("attn"):
             B, N, C = x.shape
             print(x.shape, B, N, 3, self.sample_num_heads, -1)
+            qkv = self.qkv(x)
+            print(qkv.shape)
             qkv = (
-                self.qkv(x)
+                qkv
                 .reshape(B, N, 3, self.sample_num_heads, -1)
                 .permute(2, 0, 3, 1, 4)
             )
