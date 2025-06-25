@@ -209,6 +209,7 @@ class AttentionSuper(nn.Module):
             q, k, v = qkv[0], qkv[1], qkv[2]
 
             if self.relative_position:
+                print(q.shape, self.rel_pos_embed_k(N, N).shape)
                 q = q + self.rel_pos_embed_k(N, N).unsqueeze(0)
                 v = v + self.rel_pos_embed_v(N, N).unsqueeze(0)
 
