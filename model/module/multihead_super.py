@@ -220,7 +220,7 @@ class AttentionSuper(nn.Module):
             # Use PyTorch's built-in scaled dot product attention
             attn_output, attn_weights = F.scaled_dot_product_attention(
                 q, k, v,
-                dropout_p=self.dropout if self.training else 0.0, attn_mask=attn_mask
+                dropout_p=self.attn_drop, attn_mask=attn_mask
             )
 
             x = attn_output.reshape(B, N, -1)
