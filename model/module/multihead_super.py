@@ -222,7 +222,6 @@ class AttentionSuper(nn.Module):
                 q, k, v,
                 dropout_p=self.attn_drop, attn_mask=attn_mask
             )
-
             x = attn_output.reshape(B, N, -1)
             x = self.proj(x)
             x = self.proj_drop(x)

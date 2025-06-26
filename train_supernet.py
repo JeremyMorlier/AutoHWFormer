@@ -469,6 +469,7 @@ def main(args):
     max_accuracy = 0.0
 
     for epoch in range(args.start_epoch, args.epochs):
+        epoch_start_time = time.time()
         if args.distributed:
             data_loader_train.sampler.set_epoch(epoch)
 
@@ -492,17 +493,6 @@ def main(args):
         )
         if utils.is_main_process():
             logger.log(train_stats)
-            logger.log({"cuda_mem_allocated": torch.cuda.memory_allocated()})
-        print(
-            "cuda_mem_allocated",
-            torch.cuda.memory_allocated(),
-            "cuda_max_mem_allocated",
-            torch.cuda.max_memory_allocated(),
-            "cuda_mem_reserved",
-            torch.cuda.memory_reserved(),
-            "cuda_max_mem_reserved",
-            torch.cuda.max_memory_reserved(),
-        )
 
         lr_scheduler.step(epoch)
         if args.output_dir:
@@ -533,17 +523,10 @@ def main(args):
         print(f"Accuracy of the network on the test images: {test_stats['acc1']:.1f}%")
         max_accuracy = max(max_accuracy, test_stats["acc1"])
         print(f"Max accuracy: {max_accuracy:.2f}%")
+        print(f"Epoch {epoch} training time: {time.time() - epoch_start_time:.2f}s")
         if utils.is_main_process():
             logger.log(test_stats)
-            logger.log(
-                {
-                    "max_accuracy": max_accuracy,
-                    "cuda_mem_allocated": torch.cuda.memory_allocated(),
-                    "cuda_max_mem_allocated": torch.cuda.max_memory_allocated(),
-                    "cuda_mem_reserved": torch.cuda.memory_reserved(),
-                    "cuda_max_mem_reserved": torch.cuda.max_memory_reserved(),
-                }
-            )
+            logger.log({"epoch_time": time.time() - epoch_start_time})
 
         log_stats = {
             **{f"train_{k}": v for k, v in train_stats.items()},
