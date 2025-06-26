@@ -209,7 +209,6 @@ class AttentionSuper(nn.Module):
             q, k, v = qkv[0], qkv[1], qkv[2]
 
             if self.relative_position:
-                print(k.shape, self.rel_pos_embed_k(N, N).shape)
                 # k = k + self.rel_pos_embed_k(N, N)
                 r_p_k = self.rel_pos_embed_k(N, N)
                 attn_mask = (q.permute(2, 0, 1, 3).reshape(N, self.sample_num_heads * B, -1) @ r_p_k.transpose(2, 1)) \
