@@ -209,17 +209,21 @@ class AttentionSuper(nn.Module):
             q, k, v = qkv[0], qkv[1], qkv[2]
 
             if self.relative_position:
-                print(q.shape, self.rel_pos_embed_k(N, N).shape)
-                q = q + self.rel_pos_embed_k(N, N)
-                v = v + self.rel_pos_embed_v(N, N)
-
+                print(k.shape, self.rel_pos_embed_k(N, N).shape)
+                # k = k + self.rel_pos_embed_k(N, N)
+                r_p_k = self.rel_pos_embed_k(N, N)
+                attn_mask = (q.permute(2, 0, 1, 3).reshape(N, self.sample_num_heads * B, -1) @ r_p_k.transpose(2, 1)) \
+                .transpose(1, 0).reshape(B, self.sample_num_heads, N, N) * self.sample_scale
+                # v = v + self.rel_pos_embed_v(N, N)
+            else :
+                attn_mask = None
             # Use PyTorch's built-in scaled dot product attention
             attn_output, attn_weights = F.scaled_dot_product_attention(
-                q.transpose(0, 1), k.transpose(0, 1), v.transpose(0, 1),
-                dropout_p=self.dropout if self.training else 0.0
+                q, k, v,
+                dropout_p=self.dropout if self.training else 0.0, attn_mask=attn_mask
             )
 
-            x = attn_output.transpose(0, 1).reshape(B, N, -1)
+            x = attn_output.reshape(B, N, -1)
             x = self.proj(x)
             x = self.proj_drop(x)
         return x
