@@ -17,6 +17,7 @@
 module purge
 conda deactivate
 
+module load arch/a100
 source .venv/bin/activate
 
 srun python3 train_supernet.py --cfg config/supernet-B1.yaml --output_dir results --logger txt --data-path $DSDIR/imagenet --gp --change_qk --relative_position --mode super --dist-eval  --epochs 500 --warmup-epochs 20 --batch-size 512
