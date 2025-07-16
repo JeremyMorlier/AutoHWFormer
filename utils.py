@@ -94,7 +94,7 @@ def init_distributed_mode(args):
         world_size=args.world_size,
         rank=args.rank,
     )
-    torch.distributed.barrier(args.gpu)
+    torch.distributed.barrier()
     setup_for_distributed(args.rank == 0)
 
 
@@ -134,8 +134,6 @@ def _get_cache_path(filepath):
     import hashlib
 
     h = hashlib.sha1(filepath.encode()).hexdigest()
-    cache_path = os.path.join(
-        "~", ".torch", "vision", "datasets", "imagefolder", h[:10] + ".pt"
-    )
+    cache_path = os.path.join("~", ".torch", "vision", "datasets", "imagefolder", h[:10] + ".pt")
     cache_path = os.path.expanduser(cache_path)
     return cache_path
