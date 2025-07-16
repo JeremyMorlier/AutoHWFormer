@@ -10,7 +10,6 @@ dependencies = [
     "numpy==2.2.5",
     "onnxruntime>=1.21.1",
     "onnxscript>=0.2.2",
-    "onnxsim>=0.4.36",
     "opencv-python>=4.11.0.86",
     "psutil>=7.0.0",
     "python-hostlist>=2.2.1",
