@@ -13,6 +13,7 @@ import torch
 import torch.backends.cudnn as cudnn
 
 from timm.data import Mixup
+
 # from timm.models import create_model
 from timm.loss import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy
 from timm.scheduler import create_scheduler
@@ -74,6 +75,7 @@ def train_one_epoch(
     model.train()
     criterion.train()
 
+    print("torch cudnn dot product enabled:", torch.backends.cuda.cudnn_sdp_enabled())
     # set random seed
     random.seed(epoch)
 
@@ -96,7 +98,7 @@ def train_one_epoch(
         if config is None:
             selected_config = sample_configs(choices)
         _, config_params = select_config(model, selected_config, mode, retrain_config)
-        while (config is None and config_params >= 3E7) :
+        while config is None and config_params >= 3e7:
             selected_config = sample_configs(choices)
             _, config_params = select_config(model, selected_config, mode, retrain_config)
         # # sample random config
@@ -117,9 +119,7 @@ def train_one_epoch(
                         teach_output = teacher_model(samples)
                     _, teacher_label = teach_output.topk(1, 1, True, True)
                     outputs = model(samples)
-                    loss = 1 / 2 * criterion(outputs, targets) + 1 / 2 * teach_loss(
-                        outputs, teacher_label.squeeze()
-                    )
+                    loss = 1 / 2 * criterion(outputs, targets) + 1 / 2 * teach_loss(outputs, teacher_label.squeeze())
                 else:
                     outputs = model(samples)
                     loss = criterion(outputs, targets)
@@ -129,9 +129,7 @@ def train_one_epoch(
                 with torch.no_grad():
                     teach_output = teacher_model(samples)
                 _, teacher_label = teach_output.topk(1, 1, True, True)
-                loss = 1 / 2 * criterion(outputs, targets) + 1 / 2 * teach_loss(
-                    outputs, teacher_label.squeeze()
-                )
+                loss = 1 / 2 * criterion(outputs, targets) + 1 / 2 * teach_loss(outputs, teacher_label.squeeze())
             else:
                 loss = criterion(outputs, targets)
 
@@ -145,9 +143,7 @@ def train_one_epoch(
 
         # this attribute is added by timm on one optimizer (adahessian)
         if amp:
-            is_second_order = (
-                hasattr(optimizer, "is_second_order") and optimizer.is_second_order
-            )
+            is_second_order = hasattr(optimizer, "is_second_order") and optimizer.is_second_order
             loss_scaler(
                 loss,
                 optimizer,
@@ -183,6 +179,7 @@ def evaluate(
     mode="super",
     retrain_config=None,
 ):
+    print("torch cudnn dot product enabled:", torch.backends.cuda.cudnn_sdp_enabled())
     criterion = torch.nn.CrossEntropyLoss()
 
     metric_logger = MetricLogger(delimiter="  ")
@@ -193,11 +190,11 @@ def evaluate(
 
     if config is not None:
         selected_config = config
-    else :
+    else:
         selected_config = sample_configs(choices)
     # Sample Config
     model_module, config_params = select_config(model, selected_config, mode, retrain_config)
-    while (config is None and config_params >= 3E7) :
+    while config is None and config_params >= 3e7:
         selected_config = sample_configs(choices)
         model_module, config_params = select_config(model, selected_config, mode, retrain_config)
     # if mode == 'super':
@@ -251,9 +248,7 @@ def get_dataloaders(args):
         num_tasks = utils.get_world_size()
         global_rank = utils.get_rank()
         if args.repeated_aug:
-            sampler_train = RASampler(
-                dataset_train, num_replicas=num_tasks, rank=global_rank, shuffle=True
-            )
+            sampler_train = RASampler(dataset_train, num_replicas=num_tasks, rank=global_rank, shuffle=True)
         else:
             sampler_train = torch.utils.data.DistributedSampler(
                 dataset_train, num_replicas=num_tasks, rank=global_rank, shuffle=True
@@ -376,9 +371,7 @@ def main(args):
     # Parallelize the model using Distributed Data Parallel (DDP)
     model_without_ddp = model
     if args.distributed:
-        model = torch.nn.parallel.DistributedDataParallel(
-            model, device_ids=[args.gpu], find_unused_parameters=True
-        )
+        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu], find_unused_parameters=True)
         model_without_ddp = model.module
 
     print(
@@ -425,18 +418,11 @@ def main(args):
 
     if args.resume:
         if args.resume.startswith("https"):
-            checkpoint = torch.hub.load_state_dict_from_url(
-                args.resume, map_location="cpu", check_hash=True
-            )
+            checkpoint = torch.hub.load_state_dict_from_url(args.resume, map_location="cpu", check_hash=True)
         else:
             checkpoint = torch.load(args.resume, map_location="cpu")
         model_without_ddp.load_state_dict(checkpoint["model"])
-        if (
-            not args.eval
-            and "optimizer" in checkpoint
-            and "lr_scheduler" in checkpoint
-            and "epoch" in checkpoint
-        ):
+        if not args.eval and "optimizer" in checkpoint and "lr_scheduler" in checkpoint and "epoch" in checkpoint:
             optimizer.load_state_dict(checkpoint["optimizer"])
             lr_scheduler.load_state_dict(checkpoint["lr_scheduler"])
             args.start_epoch = checkpoint["epoch"] + 1
