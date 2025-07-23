@@ -1,4 +1,5 @@
 import sys
+import os
 import time
 import datetime
 import yaml
@@ -419,17 +420,24 @@ def main(args):
     if args.resume:
         if args.resume.startswith("https"):
             checkpoint = torch.hub.load_state_dict_from_url(args.resume, map_location="cpu", check_hash=True)
-        else:
+        elif os.path.isfile(args.resume):
             checkpoint = torch.load(args.resume, map_location="cpu")
-        model_without_ddp.load_state_dict(checkpoint["model"])
-        if not args.eval and "optimizer" in checkpoint and "lr_scheduler" in checkpoint and "epoch" in checkpoint:
-            optimizer.load_state_dict(checkpoint["optimizer"])
-            lr_scheduler.load_state_dict(checkpoint["lr_scheduler"])
-            args.start_epoch = checkpoint["epoch"] + 1
-            if "scaler" in checkpoint:
-                loss_scaler.load_state_dict(checkpoint["scaler"])
-            if args.model_ema:
-                utils._load_checkpoint_for_ema(model_ema, checkpoint["model_ema"])
+        else:
+            checkpoint = None
+
+        if checkpoint is not None:
+            print("Resuming from checkpoint '{}'".format(args.resume))
+            model_without_ddp.load_state_dict(checkpoint["model"])
+            if not args.eval and "optimizer" in checkpoint and "lr_scheduler" in checkpoint and "epoch" in checkpoint:
+                optimizer.load_state_dict(checkpoint["optimizer"])
+                lr_scheduler.load_state_dict(checkpoint["lr_scheduler"])
+                args.start_epoch = checkpoint["epoch"] + 1
+                if "scaler" in checkpoint:
+                    loss_scaler.load_state_dict(checkpoint["scaler"])
+                if args.model_ema:
+                    utils._load_checkpoint_for_ema(model_ema, checkpoint["model_ema"])
+        else:
+            print("No checkpoint found, starting from scratch")
 
     retrain_config = None
     if args.mode == "retrain" and "RETRAIN" in cfg:
