@@ -5,9 +5,7 @@ def autoformer_parser(parser: argparse.ArgumentParser):
     parser.add_argument("--batch-size", default=64, type=int)
     parser.add_argument("--epochs", default=300, type=int)
     # config file
-    parser.add_argument(
-        "--cfg", help="experiment configure file name", required=True, type=str
-    )
+    parser.add_argument("--cfg", help="experiment configure file name", required=True, type=str)
 
     parser.add_argument("--name", default="default", type=str)
     parser.add_argument("--logger", default="wandb", type=str)
@@ -19,9 +17,7 @@ def autoformer_parser(parser: argparse.ArgumentParser):
         choices=["itp", "pai", "aml"],
         help="Name of model to train",
     )
-    parser.add_argument(
-        "--teacher_model", default="", type=str, help="Name of teacher model to train"
-    )
+    parser.add_argument("--teacher_model", default="", type=str, help="Name of teacher model to train")
     parser.add_argument("--relative_position", action="store_true")
     parser.add_argument("--gp", action="store_true")
     parser.add_argument("--change_qkv", action="store_true")
@@ -33,9 +29,7 @@ def autoformer_parser(parser: argparse.ArgumentParser):
     )
 
     # Model parameters
-    parser.add_argument(
-        "--model", default="", type=str, metavar="MODEL", help="Name of model to train"
-    )
+    parser.add_argument("--model", default="", type=str, metavar="MODEL", help="Name of model to train")
     # AutoFormer config
     parser.add_argument(
         "--mode",
@@ -73,12 +67,8 @@ def autoformer_parser(parser: argparse.ArgumentParser):
     parser.add_argument("--no-model-ema", action="store_false", dest="model_ema")
     # parser.set_defaults(model_ema=True)
     parser.add_argument("--model-ema-decay", type=float, default=0.99996, help="")
-    parser.add_argument(
-        "--model-ema-force-cpu", action="store_true", default=False, help=""
-    )
-    parser.add_argument(
-        "--rpe_type", type=str, default="bias", choices=["bias", "direct"]
-    )
+    parser.add_argument("--model-ema-force-cpu", action="store_true", default=False, help="")
+    parser.add_argument("--rpe_type", type=str, default="bias", choices=["bias", "direct"])
     parser.add_argument("--post_norm", action="store_true")
     parser.add_argument("--no_abs_pos", action="store_true")
 
@@ -119,9 +109,7 @@ def autoformer_parser(parser: argparse.ArgumentParser):
         metavar="M",
         help="SGD momentum (default: 0.9)",
     )
-    parser.add_argument(
-        "--weight-decay", type=float, default=0.05, help="weight decay (default: 0.05)"
-    )
+    parser.add_argument("--weight-decay", type=float, default=0.05, help="weight decay (default: 0.05)")
 
     # Learning rate schedule parameters
     parser.add_argument(
@@ -236,9 +224,7 @@ def autoformer_parser(parser: argparse.ArgumentParser):
                              "(default: rand-m9-mstd0.5-inc1)',
         ),
     )
-    parser.add_argument(
-        "--smoothing", type=float, default=0.1, help="Label smoothing (default: 0.1)"
-    )
+    parser.add_argument("--smoothing", type=float, default=0.1, help="Label smoothing (default: 0.1)")
     parser.add_argument(
         "--train-interpolation",
         type=str,
@@ -265,9 +251,7 @@ def autoformer_parser(parser: argparse.ArgumentParser):
         default="pixel",
         help='Random erase mode (default: "pixel")',
     )
-    parser.add_argument(
-        "--recount", type=int, default=1, help="Random erase count (default: 1)"
-    )
+    parser.add_argument("--recount", type=int, default=1, help="Random erase count (default: 1)")
     parser.add_argument(
         "--resplit",
         action="store_true",
@@ -315,9 +299,7 @@ def autoformer_parser(parser: argparse.ArgumentParser):
     )
 
     # Dataset parameters
-    parser.add_argument(
-        "--data-path", default="./data/imagenet/", type=str, help="dataset path"
-    )
+    parser.add_argument("--data-path", default="./data/imagenet/", type=str, help="dataset path")
     parser.add_argument(
         "--data-set",
         default="IMNET",
@@ -342,17 +324,11 @@ def autoformer_parser(parser: argparse.ArgumentParser):
         help="semantic granularity",
     )
 
-    parser.add_argument(
-        "--output_dir", default="./", help="path where to save, empty for no saving"
-    )
-    parser.add_argument(
-        "--device", default="cuda", help="device to use for training / testing"
-    )
+    parser.add_argument("--output_dir", default="./", help="path where to save, empty for no saving")
+    parser.add_argument("--device", default="cuda", help="device to use for training / testing")
     parser.add_argument("--seed", default=0, type=int)
     parser.add_argument("--resume", default="", help="resume from checkpoint")
-    parser.add_argument(
-        "--start_epoch", default=0, type=int, metavar="N", help="start epoch"
-    )
+    parser.add_argument("--start_epoch", default=0, type=int, metavar="N", help="start epoch")
     parser.add_argument("--eval", action="store_true", help="Perform evaluation only")
     parser.add_argument("--num_workers", default=10, type=int)
     parser.add_argument(
@@ -370,12 +346,8 @@ def autoformer_parser(parser: argparse.ArgumentParser):
     parser.set_defaults(pin_mem=True)
 
     # distributed training parameters
-    parser.add_argument(
-        "--world_size", default=1, type=int, help="number of distributed processes"
-    )
-    parser.add_argument(
-        "--dist_url", default="env://", help="url used to set up distributed training"
-    )
+    parser.add_argument("--world_size", default=1, type=int, help="number of distributed processes")
+    parser.add_argument("--dist_url", default="env://", help="url used to set up distributed training")
 
     parser.add_argument("--amp", action="store_true")
     parser.add_argument("--no-amp", action="store_false", dest="amp")
@@ -404,9 +376,7 @@ def evolutionary_parser(parser):
     parser.add_argument("--min-param-limits", type=float, default=18)
 
     # config file
-    parser.add_argument(
-        "--cfg", help="experiment configure file name", required=True, type=str
-    )
+    parser.add_argument("--cfg", help="experiment configure file name", required=True, type=str)
 
     # custom parameters
     parser.add_argument(
@@ -416,9 +386,7 @@ def evolutionary_parser(parser):
         choices=["itp", "pai", "aml"],
         help="Name of model to train",
     )
-    parser.add_argument(
-        "--teacher_model", default="", type=str, help="Name of teacher model to train"
-    )
+    parser.add_argument("--teacher_model", default="", type=str, help="Name of teacher model to train")
     parser.add_argument("--relative_position", action="store_true")
     parser.add_argument(
         "--max_relative_position",
@@ -431,9 +399,7 @@ def evolutionary_parser(parser):
     parser.add_argument("--change_qkv", action="store_true")
 
     # Model parameters
-    parser.add_argument(
-        "--model", default="", type=str, metavar="MODEL", help="Name of model to train"
-    )
+    parser.add_argument("--model", default="", type=str, metavar="MODEL", help="Name of model to train")
 
     parser.add_argument("--input-size", default=224, type=int)
     parser.add_argument("--patch_size", default=16, type=int)
@@ -464,34 +430,10 @@ def evolutionary_parser(parser):
     parser.add_argument("--no-model-ema", action="store_false", dest="model_ema")
     # parser.set_defaults(model_ema=True)
     parser.add_argument("--model-ema-decay", type=float, default=0.99996, help="")
-    parser.add_argument(
-        "--model-ema-force-cpu", action="store_true", default=False, help=""
-    )
-    parser.add_argument(
-        "--drop",
-        type=float,
-        default=0.0,
-        metavar="PCT",
-        help="Dropout rate (default: 0.)",
-    )
-    parser.add_argument(
-        "--drop-path",
-        type=float,
-        default=0.1,
-        metavar="PCT",
-        help="Drop path rate (default: 0.1)",
-    )
-    parser.add_argument(
-        "--drop-block",
-        type=float,
-        default=None,
-        metavar="PCT",
-        help="Drop block rate (default: None)",
-    )
+    parser.add_argument("--model-ema-force-cpu", action="store_true", default=False, help="")
+
     # custom model argument
-    parser.add_argument(
-        "--rpe_type", type=str, default="bias", choices=["bias", "direct"]
-    )
+    parser.add_argument("--rpe_type", type=str, default="bias", choices=["bias", "direct"])
     parser.add_argument("--post_norm", action="store_true")
     parser.add_argument("--no_abs_pos", action="store_true")
 
@@ -532,9 +474,7 @@ def evolutionary_parser(parser):
         metavar="M",
         help="SGD momentum (default: 0.9)",
     )
-    parser.add_argument(
-        "--weight-decay", type=float, default=0.05, help="weight decay (default: 0.05)"
-    )
+    parser.add_argument("--weight-decay", type=float, default=0.05, help="weight decay (default: 0.05)")
     # Learning rate schedule parameters
     parser.add_argument(
         "--sched",
@@ -648,9 +588,7 @@ def evolutionary_parser(parser):
                              "(default: rand-m9-mstd0.5-inc1)',
         ),
     )
-    parser.add_argument(
-        "--smoothing", type=float, default=0.1, help="Label smoothing (default: 0.1)"
-    )
+    parser.add_argument("--smoothing", type=float, default=0.1, help="Label smoothing (default: 0.1)")
     parser.add_argument(
         "--train-interpolation",
         type=str,
@@ -676,9 +614,7 @@ def evolutionary_parser(parser):
         default="pixel",
         help='Random erase mode (default: "pixel")',
     )
-    parser.add_argument(
-        "--recount", type=int, default=1, help="Random erase count (default: 1)"
-    )
+    parser.add_argument("--recount", type=int, default=1, help="Random erase count (default: 1)")
     parser.add_argument(
         "--resplit",
         action="store_true",
@@ -761,17 +697,11 @@ def evolutionary_parser(parser):
         default=False,
         help="disable fast prefetcher",
     )
-    parser.add_argument(
-        "--output_dir", default="", help="path where to save, empty for no saving"
-    )
-    parser.add_argument(
-        "--device", default="cuda", help="device to use for training / testing"
-    )
+    parser.add_argument("--output_dir", default="", help="path where to save, empty for no saving")
+    parser.add_argument("--device", default="cuda", help="device to use for training / testing")
     parser.add_argument("--seed", default=0, type=int)
     parser.add_argument("--resume", default="", help="resume from checkpoint")
-    parser.add_argument(
-        "--start_epoch", default=0, type=int, metavar="N", help="start epoch"
-    )
+    parser.add_argument("--start_epoch", default=0, type=int, metavar="N", help="start epoch")
     parser.add_argument("--eval", action="store_true", help="Perform evaluation only")
     parser.add_argument("--num_workers", default=10, type=int)
     parser.add_argument(
@@ -789,60 +719,44 @@ def evolutionary_parser(parser):
     parser.set_defaults(pin_mem=True)
 
     # distributed training parameters
-    parser.add_argument(
-        "--world_size", default=1, type=int, help="number of distributed processes"
-    )
-    parser.add_argument(
-        "--dist_url", default="env://", help="url used to set up distributed training"
-    )
+    parser.add_argument("--world_size", default=1, type=int, help="number of distributed processes")
+    parser.add_argument("--dist_url", default="env://", help="url used to set up distributed training")
     parser.add_argument("--amp", action="store_true")
     parser.add_argument("--no-amp", action="store_false", dest="amp")
     parser.set_defaults(amp=True)
 
 
 def eval_parser(parser):
-    parser.add_argument(
-        "--n_models", default=100, type=int, help="number of subnets to evaluate"
-    )
+    parser.add_argument("--n_models", default=100, type=int, help="number of subnets to evaluate")
     parser.add_argument(
         "--mapping",
         type=str,
         required=True,
         help="Path to ZigZag Mapping of the neural network",
     )
-    parser.add_argument(
-        "--accelerator", type=str, required=True, help="Path to ZigZag Accelerator"
-    )
+    parser.add_argument("--accelerator", type=str, required=True, help="Path to ZigZag Accelerator")
 
 
 def get_evolutionary_argsparse(add_help=True):
-    parser = argparse.ArgumentParser(
-        description="AutoFormer evolutionary search script", add_help=add_help
-    )
+    parser = argparse.ArgumentParser(description="AutoFormer evolutionary search script", add_help=add_help)
     evolutionary_parser(parser)
     return parser
 
 
 def get_autoformer_argsparse(add_help=True):
-    parser = argparse.ArgumentParser(
-        description="AutoFormer training and evaluation script", add_help=add_help
-    )
+    parser = argparse.ArgumentParser(description="AutoFormer training and evaluation script", add_help=add_help)
     autoformer_parser(parser)
     return parser
 
 
 def get_profile_argparse(add_help=True):
-    parser = argparse.ArgumentParser(
-        description="AutoFormer profile script", add_help=add_help
-    )
+    parser = argparse.ArgumentParser(description="AutoFormer profile script", add_help=add_help)
     autoformer_parser(parser)
     return parser
 
 
 def get_eval_argparse(add_help=True):
-    parser = argparse.ArgumentParser(
-        description="AutoFormer subnets evaluation script", add_help=add_help
-    )
+    parser = argparse.ArgumentParser(description="AutoFormer subnets evaluation script", add_help=add_help)
     autoformer_parser(parser)
     eval_parser(parser)
     return parser

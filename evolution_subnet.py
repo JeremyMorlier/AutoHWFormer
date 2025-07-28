@@ -408,7 +408,7 @@ def main(args):
         drop_last=False,
     )
 
-    print(f"Creating SuperVisionTransformer")
+    print("Creating SuperVisionTransformer")
     print(cfg)
     model = Vision_TransformerSuper(
         img_size=args.input_size,
