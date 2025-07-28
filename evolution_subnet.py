@@ -74,9 +74,7 @@ class EvolutionSearcher(object):
         info["vis_dict"] = self.vis_dict
         info["keep_top_k"] = self.keep_top_k
         info["epoch"] = self.epoch
-        checkpoint_path = os.path.join(
-            self.output_dir, "checkpoint-{}.pth.tar".format(self.epoch)
-        )
+        checkpoint_path = os.path.join(self.output_dir, "checkpoint-{}.pth.tar".format(self.epoch))
         torch.save(info, checkpoint_path)
         print("save checkpoint to", checkpoint_path)
 
@@ -200,14 +198,8 @@ class EvolutionSearcher(object):
                 new_depth = random.choice(self.choices["depth"])
 
                 if new_depth > depth:
-                    mlp_ratio = mlp_ratio + [
-                        random.choice(self.choices["mlp_ratio"])
-                        for _ in range(new_depth - depth)
-                    ]
-                    num_heads = num_heads + [
-                        random.choice(self.choices["num_heads"])
-                        for _ in range(new_depth - depth)
-                    ]
+                    mlp_ratio = mlp_ratio + [random.choice(self.choices["mlp_ratio"]) for _ in range(new_depth - depth)]
+                    num_heads = num_heads + [random.choice(self.choices["num_heads"]) for _ in range(new_depth - depth)]
                 else:
                     mlp_ratio = mlp_ratio[:new_depth]
                     num_heads = num_heads[:new_depth]
@@ -304,15 +296,9 @@ class EvolutionSearcher(object):
                 k=self.select_num,
                 key=lambda x: self.vis_dict[x]["acc"],
             )
-            self.update_top_k(
-                self.candidates, k=50, key=lambda x: self.vis_dict[x]["acc"]
-            )
+            self.update_top_k(self.candidates, k=50, key=lambda x: self.vis_dict[x]["acc"])
 
-            print(
-                "epoch = {} : top {} result".format(
-                    self.epoch, len(self.keep_top_k[50])
-                )
-            )
+            print("epoch = {} : top {} result".format(self.epoch, len(self.keep_top_k[50])))
             tmp_accuracy = []
             for i, cand in enumerate(self.keep_top_k[50]):
                 print(
@@ -327,9 +313,7 @@ class EvolutionSearcher(object):
                 tmp_accuracy.append(self.vis_dict[cand]["acc"])
             self.top_accuracies.append(tmp_accuracy)
 
-            mutation = self.get_mutation(
-                self.select_num, self.mutation_num, self.m_prob, self.s_prob
-            )
+            mutation = self.get_mutation(self.select_num, self.mutation_num, self.m_prob, self.s_prob)
             crossover = self.get_crossover(self.select_num, self.crossover_num)
 
             self.candidates = mutation + crossover
@@ -363,7 +347,7 @@ def main(args):
     args.prefetcher = not args.no_prefetcher
 
     dataset_val, args.nb_classes = build_dataset(
-        is_train=False, args=args, folder_name="subImageNet"
+        is_train=False, args=args, folder_name="subImageNet", data_path=args.evo_data_path
     )
     dataset_test, _ = build_dataset(is_train=False, args=args, folder_name="val")
 
@@ -438,9 +422,7 @@ def main(args):
     print("number of params:", n_parameters)
     if args.resume:
         if args.resume.startswith("https"):
-            checkpoint = torch.hub.load_state_dict_from_url(
-                args.resume, map_location="cpu", check_hash=True
-            )
+            checkpoint = torch.hub.load_state_dict_from_url(args.resume, map_location="cpu", check_hash=True)
         else:
             checkpoint = torch.load(args.resume, map_location="cpu")
         print("resume from checkpoint: {}".format(args.resume))

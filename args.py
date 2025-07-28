@@ -669,6 +669,12 @@ def evolutionary_parser(parser):
         help="dataset path",
     )
     parser.add_argument(
+        "--evo-data-path",
+        default="/datasets01_101/imagenet_full_size/061417/",
+        type=str,
+        help="dataset path for evolutionary search",
+    )
+    parser.add_argument(
         "--data-set",
         default="IMNET",
         choices=["CIFAR", "IMNET", "INAT", "INAT19", "EVO_IMNET"],

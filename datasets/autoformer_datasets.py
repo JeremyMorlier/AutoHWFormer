@@ -63,9 +63,7 @@ class Cars196(ImageFolder, datasets.CIFAR10):
     test_list = []
     num_training_classes = 98  # 196/2
 
-    def __init__(
-        self, root, train=False, transform=None, target_transform=None, **kwargs
-    ):
+    def __init__(self, root, train=False, transform=None, target_transform=None, **kwargs):
         self.root = root
         self.transform = transform
 
@@ -77,11 +75,9 @@ class Cars196(ImageFolder, datasets.CIFAR10):
         self.nb_classes = 196
 
         if train:
-            labels = sio.loadmat(
-                os.path.join(
-                    self.root, self.base_folder_devkit, self.filename_trainanno
-                )
-            )["annotations"][0]
+            labels = sio.loadmat(os.path.join(self.root, self.base_folder_devkit, self.filename_trainanno))[
+                "annotations"
+            ][0]
             for item in labels:
                 img_name = item[-1].tolist()[0]
                 label = int(item[4]) - 1
@@ -92,21 +88,15 @@ class Cars196(ImageFolder, datasets.CIFAR10):
                     )
                 )
         else:
-            labels = sio.loadmat(
-                os.path.join(self.root, "cars_test_annos_withlabels.mat")
-            )["annotations"][0]
+            labels = sio.loadmat(os.path.join(self.root, "cars_test_annos_withlabels.mat"))["annotations"][0]
             for item in labels:
                 img_name = item[-1].tolist()[0]
                 label = int(item[-2]) - 1
-                self.samples.append(
-                    (os.path.join(self.root, self.base_folder_testims, img_name), label)
-                )
+                self.samples.append((os.path.join(self.root, self.base_folder_testims, img_name), label))
 
 
 class Pets(ImageFolder):
-    def __init__(
-        self, root, train=True, transform=None, target_transform=None, **kwargs
-    ):
+    def __init__(self, root, train=True, transform=None, target_transform=None, **kwargs):
         self.dataset_root = root
         self.loader = default_loader
         self.target_transform = None
@@ -190,39 +180,37 @@ class INatDataset(ImageFolder):
     # __getitem__ and __len__ inherited from ImageFolder
 
 
-def build_dataset(is_train, args, folder_name=None):
+def build_dataset(is_train, args, folder_name=None, data_path=None):
     transform = build_transform(is_train, args)
 
+    if data_path is None:
+        data_path = args.data_path
     if args.data_set == "CIFAR10":
-        dataset = datasets.CIFAR10(
-            args.data_path, train=is_train, transform=transform, download=True
-        )
+        dataset = datasets.CIFAR10(data_path, train=is_train, transform=transform, download=True)
         nb_classes = 10
     elif args.data_set == "CIFAR100":
-        dataset = datasets.CIFAR100(
-            args.data_path, train=is_train, transform=transform, download=True
-        )
+        dataset = datasets.CIFAR100(data_path, train=is_train, transform=transform, download=True)
         nb_classes = 100
     elif args.data_set == "CARS":
-        dataset = Cars196(args.data_path, train=is_train, transform=transform)
+        dataset = Cars196(data_path, train=is_train, transform=transform)
         nb_classes = 196
     elif args.data_set == "PETS":
-        dataset = Pets(args.data_path, train=is_train, transform=transform)
+        dataset = Pets(data_path, train=is_train, transform=transform)
         nb_classes = 37
     elif args.data_set == "FLOWERS":
-        dataset = Flowers(args.data_path, train=is_train, transform=transform)
+        dataset = Flowers(data_path, train=is_train, transform=transform)
         nb_classes = 102
     elif args.data_set == "IMNET":
-        root = os.path.join(args.data_path, "train" if is_train else "val")
+        root = os.path.join(data_path, "train" if is_train else "val")
         dataset = datasets.ImageFolder(root, transform=transform)
         nb_classes = 1000
     elif args.data_set == "EVO_IMNET":
-        root = os.path.join(args.data_path, folder_name)
+        root = os.path.join(data_path, folder_name)
         dataset = datasets.ImageFolder(root, transform=transform)
         nb_classes = 1000
     elif args.data_set == "INAT":
         dataset = INatDataset(
-            args.data_path,
+            data_path,
             train=is_train,
             year=2018,
             category=args.inat_category,
@@ -231,7 +219,7 @@ def build_dataset(is_train, args, folder_name=None):
         nb_classes = dataset.nb_classes
     elif args.data_set == "INAT19":
         dataset = INatDataset(
-            args.data_path,
+            data_path,
             train=is_train,
             year=2019,
             category=args.inat_category,
@@ -266,9 +254,7 @@ def build_transform(is_train, args):
     if resize_im:
         size = int((256 / 224) * args.input_size)
         t.append(
-            transforms.Resize(
-                size, interpolation=3
-            ),  # to maintain same ratio w.r.t. 224 images
+            transforms.Resize(size, interpolation=3),  # to maintain same ratio w.r.t. 224 images
         )
         t.append(transforms.CenterCrop(args.input_size))
 
