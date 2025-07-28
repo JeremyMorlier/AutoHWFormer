@@ -17,7 +17,7 @@ dependencies = [
     "scipy>=1.15.2",
     "stream-dse",
     "timm>=1.0.15",
-    "torch==2.5.0",
+    "torch>=2.7.0",
     "tqdm>=4.67.1",
     "uv>=0.6.6",
     "wandb>=0.19.6",
