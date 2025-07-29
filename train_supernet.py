@@ -189,15 +189,21 @@ def evaluate(
     # switch to evaluation mode
     model.eval()
 
-    if config is not None:
-        selected_config = config
-    else:
-        selected_config = sample_configs(choices)
-    # Sample Config
-    model_module, config_params = select_config(model, selected_config, mode, retrain_config)
-    while config is None and config_params >= 3e7:
-        selected_config = sample_configs(choices)
+    if mode == "super":
+        if config is not None:
+            selected_config = config
+        else:
+            selected_config = sample_configs(choices)
+        # Sample Config
         model_module, config_params = select_config(model, selected_config, mode, retrain_config)
+        while config is None and config_params >= 3e7:
+            selected_config = sample_configs(choices)
+            model_module, config_params = select_config(model, selected_config, mode, retrain_config)
+    elif mode == "retrain":
+        selected_config = retrain_config
+        model_module, _ = select_config(model, selected_config, mode, retrain_config)
+    else:
+        raise ValueError("Unknown mode: {}".format(mode))
     # if mode == 'super':
     #     config = sample_configs(choices=choices)
     #     model_module = unwrap_model(model)
