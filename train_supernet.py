@@ -204,14 +204,6 @@ def evaluate(
         model_module, _ = select_config(model, selected_config, mode, retrain_config)
     else:
         raise ValueError("Unknown mode: {}".format(mode))
-    # if mode == 'super':
-    #     config = sample_configs(choices=choices)
-    #     model_module = unwrap_model(model)
-    #     model_module.set_sample_config(config=config)
-    # else:
-    #     config = retrain_config
-    #     model_module = unwrap_model(model)
-    #     model_module.set_sample_config(config=config)
 
     print("sampled model config: {}".format(selected_config))
     parameters = model_module.get_sampled_params_numel(selected_config)
